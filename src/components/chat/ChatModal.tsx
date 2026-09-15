@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Send, X } from "lucide-react";
 import { api } from "../../services/api";
+import { getAuthToken } from "../../utils/authStorage";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "https://karmiq.onrender.com").replace(/\/+$/, "").replace(/\/api$/, "");
 
@@ -18,9 +19,9 @@ export default function ChatModal({
   const [input, setInput] = useState("");
 
   const load = () => {
-    const token = localStorage.getItem("kaamsaathi_token");
+    const token = getAuthToken();
     fetch(`${API_BASE}/api/bookings/${bookingId}/messages`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token || ""}` },
     })
       .then((r) => r.json())
       .then((x) => x.success && setMessages(x.data));
@@ -34,11 +35,12 @@ export default function ChatModal({
 
   const send = async () => {
     if (!input.trim()) return;
+    const token = getAuthToken();
     await fetch(`${API_BASE}/api/bookings/${bookingId}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("kaamsaathi_token") || ""}`,
+        Authorization: `Bearer ${token || ""}`,
       },
       body: JSON.stringify({ text: input }),
     });

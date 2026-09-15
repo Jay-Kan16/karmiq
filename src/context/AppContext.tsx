@@ -7,6 +7,7 @@ import {
   type TranslationKey
 } from "../data/translations";
 import { api, login as apiLogin } from "../services/api";
+import { getAuthToken, setAuthSession, getAuthUser, clearAuthSession } from "../utils/authStorage";
 
 export interface UserLocation {
   address: string;
@@ -28,7 +29,7 @@ interface Ctx {
   matchedWorker: Worker | null;
   setMatchedWorker: React.Dispatch<React.SetStateAction<Worker | null>>;
   workerOnline: boolean;
-  setWorkerOnline: (v: boolean) => void;
+  setWorkerOnline: (o: boolean) => void;
   currentLocation: UserLocation;
   setCurrentLocation: (l: UserLocation) => void;
   language: LanguageCode;
@@ -41,17 +42,12 @@ const AppContext = createContext<Ctx | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    try {
-      const r = localStorage.getItem("kaamsaathi_user");
-      return r ? JSON.parse(r) : null;
-    } catch {
-      return null;
-    }
+    return getAuthUser();
   });
 
   const [isInitializing, setIsInitializing] = useState<boolean>(() => {
-    // If token exists, we stay in initializing state until verified
-    return Boolean(localStorage.getItem("kaamsaathi_token"));
+    // If token exists in this tab, we stay in initializing state until verified
+    return Boolean(getAuthToken());
   });
 
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -74,13 +70,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Verify and restore session on boot or refresh
   useEffect(() => {
-    const token = localStorage.getItem("kaamsaathi_token");
+    const token = getAuthToken();
     if (token) {
       api
         .getMe()
         .then((u) => {
           setUser(u);
-          localStorage.setItem("kaamsaathi_user", JSON.stringify(u));
+          setAuthSession(token, u);
         })
         .catch((err) => {
           console.warn("Session refresh warning:", err);
@@ -105,17 +101,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const loginReal = async (phone: string, password: string) => {
     const r = await apiLogin(phone, password);
-    localStorage.setItem("kaamsaathi_token", r.token);
-    localStorage.setItem("kaamsaathi_user", JSON.stringify(r.user));
+    setAuthSession(r.token, r.user);
     setUser(r.user);
     setIsInitializing(false);
     return r.user;
   };
 
   const logout = async () => {
-    const token = localStorage.getItem("kaamsaathi_token");
-    localStorage.removeItem("kaamsaathi_token");
-    localStorage.removeItem("kaamsaathi_user");
+    const token = getAuthToken();
+    clearAuthSession();
     setUser(null);
     setBooking(null);
     try {
