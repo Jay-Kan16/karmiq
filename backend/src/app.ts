@@ -11,12 +11,18 @@ import { notFound, errorHandler } from "./middleware/error.js";
 const app = express();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-let clientDist = path.resolve(__dirname, "../../dist");
-if (!fs.existsSync(clientDist)) {
-  clientDist = path.resolve(process.cwd(), "dist");
-}
-if (!fs.existsSync(clientDist)) {
-  clientDist = path.resolve(process.cwd(), "../dist");
+const candidateDirs = [
+  path.resolve(process.cwd(), "../dist"),
+  path.resolve(process.cwd(), "dist"),
+  path.resolve(__dirname, "../../dist"),
+  path.resolve(__dirname, "../dist"),
+  path.resolve(__dirname, "../../../dist"),
+];
+const clientDist = candidateDirs.find((dir) => fs.existsSync(path.join(dir, "index.html")));
+if (clientDist) {
+  console.log(`[Static] Serving frontend client from: ${clientDist}`);
+} else {
+  console.warn("[Static] Notice: No frontend dist containing index.html found.");
 }
 
 app.use(
@@ -57,8 +63,8 @@ app.use(
 app.get("/api/health", (req, res) => res.json({ success: true, data: { status: "ok" } }));
 app.use("/api", routes);
 
-// Serve static frontend in production if dist directory exists
-if (fs.existsSync(clientDist)) {
+// Serve static frontend in production if dist directory containing index.html exists
+if (clientDist) {
   app.use(express.static(clientDist));
   app.get("*", (req, res, next) => {
     if (req.originalUrl.startsWith("/api")) {
