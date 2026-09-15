@@ -43,7 +43,7 @@ export default function Payment() {
   const bookingId = b.id || b._id || id;
   const workerName = b.workerId?.userId?.name || "Service Partner";
   const fare = b.fare || 0;
-  const upiId = "karmiq.coop@okhdfcbank";
+  const upiId = "9636472224@ptaxis";
   const payeeName = "KarmiK Cooperative";
   const note = `KarmiK Booking ${String(bookingId).slice(-6)}`;
 
