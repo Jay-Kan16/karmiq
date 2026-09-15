@@ -8,7 +8,7 @@ export default function Logo() {
         <Wrench size={21} />
       </span>
       <span>
-        <span className="block text-lg font-extrabold leading-none text-slate-900">Karmi<span className="text-brand-600">Q</span></span>
+        <span className="block text-lg font-extrabold leading-none text-slate-900">Karmi<span className="text-brand-600">K</span></span>
         <span className="hidden text-[10px] font-medium text-slate-400 sm:block">Verified Skills. Fair Work.</span>
       </span>
     </Link>
