@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
+import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
 
 export default function Jobs() {
   const nav = useNavigate();
@@ -20,6 +21,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [selectedBookingForExtra, setSelectedBookingForExtra] = useState<any | null>(null);
 
   const loadJobs = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -248,6 +250,16 @@ export default function Jobs() {
                       <ChevronRight size={17} />
                     </button>
                   )}
+
+                  {["ACCEPTED", "ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status) && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBookingForExtra(b)}
+                      className="btn-secondary col-span-full flex items-center justify-center gap-1.5 border-brand-300 bg-brand-50/50 py-2 text-xs font-black text-brand-700 hover:bg-brand-100 transition"
+                    >
+                      + Add Extra Charges {b.extraCharges ? `(Current: ₹${b.extraCharges})` : ""}
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -270,6 +282,24 @@ export default function Jobs() {
             <RefreshCw size={13} /> Check Again
           </button>
         </div>
+      )}
+
+      {selectedBookingForExtra && (
+        <AddExtraChargesModal
+          bookingId={selectedBookingForExtra.id || selectedBookingForExtra._id}
+          customerName={selectedBookingForExtra.customerId?.name}
+          serviceName={selectedBookingForExtra.serviceId?.name}
+          currentFare={selectedBookingForExtra.fare || 0}
+          currentExtra={selectedBookingForExtra.extraCharges || 0}
+          onClose={() => setSelectedBookingForExtra(null)}
+          onSuccess={(updated) => {
+            setData((prev) =>
+              prev.map((item) =>
+                (item.id || item._id) === (updated.id || updated._id) ? updated : item
+              )
+            );
+          }}
+        />
       )}
     </div>
   );

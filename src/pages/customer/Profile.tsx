@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Home, Languages, LogOut, MapPin, Shield, Wallet, X, Phone, CreditCard, AlertCircle } from "lucide-react";
+import { Check, ChevronRight, Home, Languages, LogOut, MapPin, Shield, Wallet, X, Phone, CreditCard, AlertCircle, Receipt } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,6 +11,7 @@ export default function Profile() {
   const { user, logout, language, setLanguage, currentLocation, t } = useApp();
   const [activeModal, setActiveModal] = useState<"address" | "language" | "payment" | "support" | null>(null);
   const [busyBookings, setBusyBookings] = useState<any[]>([]);
+  const [extraChargeBookings, setExtraChargeBookings] = useState<any[]>([]);
 
   useEffect(() => {
     api.getBookings()
@@ -18,6 +19,8 @@ export default function Profile() {
         const list = Array.isArray(res) ? res : res?.bookings || [];
         const busy = list.filter((b: any) => b.status === "REJECTED");
         setBusyBookings(busy);
+        const extraList = list.filter((b: any) => (b.extraCharges || 0) > 0 && b.status !== "CANCELLED");
+        setExtraChargeBookings(extraList);
       })
       .catch(() => {});
   }, []);
@@ -75,6 +78,41 @@ export default function Profile() {
               className="btn-primary shrink-0 bg-amber-600 px-4 py-2 text-xs font-black text-white hover:bg-amber-700 shadow-md shadow-amber-600/20"
             >
               Change Worker
+            </button>
+          </div>
+        </div>
+      )}
+
+      {extraChargeBookings.length > 0 && (
+        <div className="mt-4 rounded-2xl border-2 border-emerald-400 bg-emerald-50/90 p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                <Receipt size={20} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-black text-emerald-950 uppercase">
+                    Extra Charges Added
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-800">
+                    Booking #{String(extraChargeBookings[0]._id || extraChargeBookings[0].id).slice(-6)}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-sm font-black text-emerald-950">
+                  Worker added +₹{extraChargeBookings[0].extraCharges} extra charges
+                </p>
+                <p className="text-xs text-emerald-800">
+                  Reason: <b>{extraChargeBookings[0].extraChargesReason || "Materials & extra labor"}</b>
+                  {" "}• Total Bill: <span className="font-black text-emerald-950">₹{extraChargeBookings[0].fare}</span>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => nav(`/booking/${extraChargeBookings[0]._id || extraChargeBookings[0].id}/tracking`)}
+              className="btn-primary shrink-0 bg-emerald-700 px-4 py-2 text-xs font-black text-white hover:bg-emerald-800 shadow-md shadow-emerald-700/20"
+            >
+              View Bill & Track
             </button>
           </div>
         </div>

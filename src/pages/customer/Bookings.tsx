@@ -45,7 +45,12 @@ export default function Bookings() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <b>₹{b.fare}</b>
+                <div className="text-right">
+                  <b className="text-base text-slate-900">₹{b.fare}</b>
+                  {b.extraCharges && b.extraCharges > 0 ? (
+                    <p className="text-[10px] font-bold text-amber-700">+₹{b.extraCharges} extra</p>
+                  ) : null}
+                </div>
                 {b.status === "REJECTED" ? (
                   <Link
                     to={`/booking/${b._id || b.id}/tracking`}

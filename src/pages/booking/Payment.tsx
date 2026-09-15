@@ -97,7 +97,13 @@ export default function Payment() {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
-        <PaymentSummary fare={b.fare} serviceName={b.serviceId?.name || ""} />
+        <PaymentSummary
+          fare={b.fare}
+          serviceName={b.serviceId?.name || ""}
+          baseFare={b.baseFare}
+          extraCharges={b.extraCharges}
+          extraChargesReason={b.extraChargesReason}
+        />
 
         <div className="card space-y-4 p-5">
           <h3 className="font-bold text-slate-900">Choose payment method</h3>

@@ -12,7 +12,8 @@ import {
   Star,
   AlertCircle,
   Radio,
-  X
+  X,
+  PlusCircle
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MapView from "../../components/map/MapView";
@@ -21,6 +22,7 @@ import StatusBadge from "../../components/common/StatusBadge";
 import ChatModal from "../../components/chat/ChatModal";
 import CallModal from "../../components/chat/CallModal";
 import WorkerRadarScanner from "../../components/booking/WorkerRadarScanner";
+import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import type { Booking } from "../../types";
@@ -38,6 +40,7 @@ export default function Tracking() {
   const [showScanner, setShowScanner] = useState(false);
   const [nearbyWorkers, setNearbyWorkers] = useState<any[]>([]);
   const [radarLoading, setRadarLoading] = useState(false);
+  const [showExtraModal, setShowExtraModal] = useState(false);
 
   const openRadarScanner = async () => {
     setShowScanner(true);
@@ -250,6 +253,26 @@ export default function Tracking() {
                 <MessageCircle size={15} /> Message
               </button>
             </div>
+
+            {/* Live Bill Card with Extra Charges */}
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500">Current Total Fare</span>
+                  <p className="text-xl font-black text-slate-900">₹{b.fare}</p>
+                </div>
+                {b.extraCharges && b.extraCharges > 0 ? (
+                  <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">
+                    +₹{b.extraCharges} Extra Included
+                  </span>
+                ) : null}
+              </div>
+              {b.extraCharges && b.extraCharges > 0 && b.extraChargesReason && (
+                <p className="mt-1.5 text-xs text-amber-800">
+                  Worker Note: <b>{b.extraChargesReason}</b>
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Journey Stepper Card */}
@@ -352,6 +375,17 @@ export default function Tracking() {
             </button>
           )}
 
+          {/* Worker Extra Charges Button */}
+          {user?.role === "worker" && !isCompleted && b.status !== "CANCELLED" && (
+            <button
+              type="button"
+              onClick={() => setShowExtraModal(true)}
+              className="btn-secondary w-full flex items-center justify-center gap-1.5 border-brand-300 bg-brand-50/50 py-2.5 text-xs font-black text-brand-700 hover:bg-brand-100"
+            >
+              <PlusCircle size={15} /> + Add Extra Charges {b.extraCharges ? `(Current: ₹${b.extraCharges})` : ""}
+            </button>
+          )}
+
           {/* Customer Cancel Button (Only before completion) */}
           {user?.role === "customer" && !isCompleted && b.status !== "CANCELLED" && (
             <button
@@ -414,6 +448,18 @@ export default function Tracking() {
             />
           </div>
         </div>
+      )}
+
+      {showExtraModal && b && (
+        <AddExtraChargesModal
+          bookingId={b.id || (b as any)._id}
+          customerName={(b as any).customerId?.name}
+          serviceName={(b.serviceId as any)?.name || (b as any).serviceName}
+          currentFare={b.fare}
+          currentExtra={b.extraCharges || 0}
+          onClose={() => setShowExtraModal(false)}
+          onSuccess={(updated) => setB(updated as any)}
+        />
       )}
     </div>
   );
