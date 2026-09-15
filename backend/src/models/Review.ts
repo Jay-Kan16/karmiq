@@ -1,0 +1,2 @@
+import {Schema,model} from "mongoose";
+const schema=new Schema({bookingId:{type:Schema.Types.ObjectId,ref:"Booking",required:true,unique:true},customerId:{type:Schema.Types.ObjectId,ref:"User",required:true},workerId:{type:Schema.Types.ObjectId,ref:"Worker",required:true},stars:{type:Number,min:1,max:5,required:true},tags:[String],comment:String},{timestamps:true}); export default model("Review",schema);

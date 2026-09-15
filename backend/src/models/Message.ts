@@ -1,0 +1,1 @@
+import {Schema,model} from "mongoose";const schema=new Schema({bookingId:{type:Schema.Types.ObjectId,ref:"Booking",required:true,index:true},senderId:{type:Schema.Types.ObjectId,ref:"User",required:true},text:{type:String,required:true,maxlength:2000}},{timestamps:true});export default model("Message",schema);

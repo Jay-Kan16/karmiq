@@ -1,0 +1,1 @@
+export default function Forecast(){return <div><h1 className="section-title">Forecast</h1><p className="muted mt-2">Demand forecasting is available once sufficient historical booking data has been collected.</p><div className="card mt-5 p-6">No forecast data is currently available.</div></div>}

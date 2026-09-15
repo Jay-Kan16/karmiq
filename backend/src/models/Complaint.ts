@@ -1,0 +1,1 @@
+import {Schema,model} from "mongoose"; export default model("Complaint",new Schema({bookingId:{type:Schema.Types.ObjectId,ref:"Booking",required:true},customerId:{type:Schema.Types.ObjectId,ref:"User",required:true},issue:{type:String,required:true},status:{type:String,enum:["IN REVIEW","RESOLVED"],default:"IN REVIEW"}},{timestamps:true}));

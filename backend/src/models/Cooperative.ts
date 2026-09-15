@@ -1,0 +1,1 @@
+import {Schema,model} from "mongoose"; export default model("Cooperative",new Schema({name:{type:String,required:true,unique:true},description:String,active:{type:Boolean,default:true}},{timestamps:true}));

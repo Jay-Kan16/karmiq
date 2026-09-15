@@ -1,0 +1,1 @@
+export default function Workforce(){return <div><h1 className="section-title">Workforce</h1><p className="muted mt-2">Workforce recommendations will be calculated from live worker availability and booking demand.</p><div className="card mt-5 p-6">No recommendation data is currently available.</div></div>}

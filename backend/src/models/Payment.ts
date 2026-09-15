@@ -1,0 +1,2 @@
+import {Schema,model} from "mongoose";
+const schema=new Schema({bookingId:{type:Schema.Types.ObjectId,ref:"Booking",required:true,index:true},customerId:{type:Schema.Types.ObjectId,ref:"User",required:true},amount:{type:Number,required:true},status:{type:String,enum:["PENDING","PAID","FAILED"],default:"PENDING"},method:String,transactionId:String},{timestamps:true}); export default model("Payment",schema);

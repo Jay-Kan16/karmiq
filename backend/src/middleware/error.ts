@@ -1,0 +1,3 @@
+import type {Request,Response,NextFunction} from "express"; import mongoose from "mongoose";
+export function notFound(req:Request,res:Response){res.status(404).json({success:false,message:"Route not found"})}
+export function errorHandler(err:any,req:Request,res:Response,next:NextFunction){console.error(err); if(err instanceof mongoose.Error.ValidationError)return res.status(400).json({success:false,message:"Validation error",errors:err.errors}); if(err?.code===11000)return res.status(409).json({success:false,message:"A record with that value already exists"}); res.status(err?.statusCode||500).json({success:false,message:err?.message||"Internal server error"})}

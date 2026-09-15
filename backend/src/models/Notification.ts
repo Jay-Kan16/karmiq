@@ -1,0 +1,2 @@
+import {Schema,model} from "mongoose";
+const schema=new Schema({recipientId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},type:{type:String,enum:["booking","payment","system"],required:true},title:String,message:String,bookingId:{type:Schema.Types.ObjectId,ref:"Booking"},read:{type:Boolean,default:false}},{timestamps:true}); export default model("Notification",schema);
