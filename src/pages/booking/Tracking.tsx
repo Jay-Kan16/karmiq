@@ -9,7 +9,10 @@ import {
   MessageCircle,
   Phone,
   Sparkles,
-  Star
+  Star,
+  AlertCircle,
+  Radio,
+  X
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MapView from "../../components/map/MapView";
@@ -17,6 +20,7 @@ import BookingStepper from "../../components/booking/BookingStepper";
 import StatusBadge from "../../components/common/StatusBadge";
 import ChatModal from "../../components/chat/ChatModal";
 import CallModal from "../../components/chat/CallModal";
+import WorkerRadarScanner from "../../components/booking/WorkerRadarScanner";
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import type { Booking } from "../../types";
@@ -31,6 +35,27 @@ export default function Tracking() {
   const [customerCoord, setCustomerCoord] = useState<any>(null);
   const [chat, setChat] = useState(false);
   const [call, setCall] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [nearbyWorkers, setNearbyWorkers] = useState<any[]>([]);
+  const [radarLoading, setRadarLoading] = useState(false);
+
+  const openRadarScanner = async () => {
+    setShowScanner(true);
+    setRadarLoading(true);
+    try {
+      const loc = b?.location as any;
+      const lat = customerCoord?.lat || loc?.coordinates?.[1] || loc?.lat;
+      const lng = customerCoord?.lng || loc?.coordinates?.[0] || loc?.lng;
+      const serviceName = (b?.serviceId as any)?.name || (b as any)?.serviceName || (typeof b?.serviceId === "string" ? b.serviceId : "Service");
+      const list = await api.getNearbyWorkers(serviceName, lat, lng);
+      setNearbyWorkers(list || []);
+    } catch (err) {
+      console.error("Failed to load nearby workers for reassignment", err);
+      setNearbyWorkers([]);
+    } finally {
+      setRadarLoading(false);
+    }
+  };
 
   const home =
     user?.role === "worker"
@@ -153,6 +178,38 @@ export default function Tracking() {
 
         {/* Right Info & Actions Column */}
         <div className="space-y-4">
+          {/* Worker is busy alert if REJECTED */}
+          {b.status === "REJECTED" && (
+            <div className="card border-2 border-amber-400 bg-amber-50/90 p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800">
+                  <AlertCircle size={22} />
+                </div>
+                <div className="flex-1">
+                  <span className="inline-block rounded-full bg-amber-200/80 px-2.5 py-0.5 text-xs font-black text-amber-900 uppercase">
+                    Worker is busy
+                  </span>
+                  <h3 className="mt-1 text-base font-black text-amber-950">
+                    Worker is currently busy
+                  </h3>
+                  <p className="mt-1 text-xs text-amber-800 leading-relaxed">
+                    {b.rejectedReason || "The assigned worker is busy with another job and unable to take this request."}{" "}
+                    Please change worker to assign a new nearby professional.
+                  </p>
+                </div>
+              </div>
+              {user?.role === "customer" && (
+                <button
+                  onClick={openRadarScanner}
+                  className="btn-primary mt-4 flex w-full items-center justify-center gap-2 bg-amber-600 py-3 text-sm font-black text-white hover:bg-amber-700 shadow-md shadow-amber-600/25 transition active:scale-[0.99]"
+                >
+                  <Radio size={16} className="animate-pulse" />
+                  Change Worker
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Worker Card */}
           <div className="card p-5">
             <div className="flex items-start justify-between">
@@ -315,6 +372,49 @@ export default function Tracking() {
 
       {chat && <ChatModal bookingId={b.id} workerName={workerName} onClose={() => setChat(false)} />}
       {call && phone && <CallModal phone={phone} name={workerName} onClose={() => setCall(false)} />}
+
+      {showScanner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+            <button
+              onClick={() => setShowScanner(false)}
+              className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+            >
+              <X size={18} />
+            </button>
+            <WorkerRadarScanner
+              serviceName={(b.serviceId as any)?.name || (b as any).serviceName || (typeof b.serviceId === "string" ? b.serviceId : "Service")}
+              serviceIcon="⚡"
+              userAddress={customerCoord?.address || b.location?.address || "Your location"}
+              workers={nearbyWorkers}
+              loading={radarLoading}
+              onSelectWorker={async (w) => {
+                try {
+                  const updated = await api.reassignWorker(b.id, w.id);
+                  setB(updated as any);
+                  setWorker(updated.workerId);
+                  setShowScanner(false);
+                } catch (err: any) {
+                  alert(err.message || "Failed to reassign worker");
+                }
+              }}
+              onAutoAssign={async () => {
+                if (nearbyWorkers.length > 0) {
+                  try {
+                    const updated = await api.reassignWorker(b.id, nearbyWorkers[0].id);
+                    setB(updated as any);
+                    setWorker(updated.workerId);
+                    setShowScanner(false);
+                  } catch (err: any) {
+                    alert(err.message || "Failed to reassign worker");
+                  }
+                }
+              }}
+              onCancel={() => setShowScanner(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

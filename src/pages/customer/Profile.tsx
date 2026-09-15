@@ -1,12 +1,26 @@
-import { Check, ChevronRight, Home, Languages, LogOut, MapPin, Shield, Wallet, X, Phone, CreditCard } from "lucide-react";
-import { useState } from "react";
+import { Check, ChevronRight, Home, Languages, LogOut, MapPin, Shield, Wallet, X, Phone, CreditCard, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "../../context/AppContext";
+import { api } from "../../services/api";
 import type { LanguageCode } from "../../data/translations";
 
 export default function Profile() {
+  const nav = useNavigate();
   const { user, logout, language, setLanguage, currentLocation, t } = useApp();
   const [activeModal, setActiveModal] = useState<"address" | "language" | "payment" | "support" | null>(null);
+  const [busyBookings, setBusyBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.getBookings()
+      .then((res: any) => {
+        const list = Array.isArray(res) ? res : res?.bookings || [];
+        const busy = list.filter((b: any) => b.status === "REJECTED");
+        setBusyBookings(busy);
+      })
+      .catch(() => {});
+  }, []);
 
   const availableLanguages: { code: LanguageCode; name: string; native: string; description: string }[] = [
     { code: "en", name: "English", native: "English", description: "Default international language" },
@@ -36,6 +50,35 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {busyBookings.length > 0 && (
+        <div className="mt-4 rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <span className="inline-block rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-black text-amber-900 uppercase">
+                  Worker is busy
+                </span>
+                <p className="mt-0.5 text-sm font-black text-amber-950">
+                  Worker is busy for booking #{String(busyBookings[0]._id || busyBookings[0].id).slice(-6)}
+                </p>
+                <p className="text-xs text-amber-800">
+                  The assigned worker is unavailable. Please choose another worker to proceed.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => nav(`/booking/${busyBookings[0]._id || busyBookings[0].id}/tracking`)}
+              className="btn-primary shrink-0 bg-amber-600 px-4 py-2 text-xs font-black text-white hover:bg-amber-700 shadow-md shadow-amber-600/20"
+            >
+              Change Worker
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card mt-4 divide-y divide-slate-100">
         {/* Saved Addresses */}

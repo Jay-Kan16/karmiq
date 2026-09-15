@@ -12,13 +12,15 @@ const statusKeyMap: Partial<Record<BookingStatus, TranslationKey>> = {
   COMPLETED: "statusCompleted",
   PAYMENT: "statusPayment",
   RATING: "statusRating",
-  CANCELLED: "statusCancelled"
+  CANCELLED: "statusCancelled",
+  REJECTED: "statusWorkerBusy"
 };
 
 export default function StatusBadge({ status }: { status: BookingStatus }) {
   const { t } = useApp();
   const tone = status === "COMPLETED" ? "bg-brand-50 text-brand-700" :
     status === "CANCELLED" ? "bg-red-50 text-red-700" :
+    status === "REJECTED" ? "bg-amber-100 text-amber-900 border border-amber-300 font-black" :
     status === "SEARCHING" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700";
   return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${tone}`}>{t(statusKeyMap[status] || "statusSearching")}</span>;
 }

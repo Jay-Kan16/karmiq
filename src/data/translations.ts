@@ -271,6 +271,9 @@ export const translations = {
     statusPayment: "Payment",
     statusRating: "Rating",
     statusCancelled: "Cancelled",
+    statusWorkerBusy: "Worker is busy",
+    changeWorker: "Change Worker",
+    workerBusyAlert: "Worker is busy with other tasks",
 
     // Login
     coopMarketplace: "Cooperative-owned marketplace",
@@ -535,6 +538,9 @@ export const translations = {
     statusPayment: "भुगतान",
     statusRating: "रेटिंग",
     statusCancelled: "रद्द",
+    statusWorkerBusy: "कारीगर व्यस्त हैं",
+    changeWorker: "दूसरा कार्यकर्ता चुनें",
+    workerBusyAlert: "कार्यकर्ता अभी अन्य कार्यों में व्यस्त हैं",
 
     // Login
     coopMarketplace: "सहकारी स्वामित्व वाला मंच",

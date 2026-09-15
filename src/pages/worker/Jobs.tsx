@@ -8,7 +8,8 @@ import {
   Phone,
   AlertCircle,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  XCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
@@ -70,9 +71,13 @@ export default function Jobs() {
     setActionLoadingId(bookingId);
     try {
       await api.updateBookingStatus(bookingId, status as any);
-      setData((prev) =>
-        prev.map((item) => ((item.id || item._id) === bookingId ? { ...item, status } : item))
-      );
+      if (status === "REJECTED") {
+        setData((prev) => prev.filter((item) => (item.id || item._id) !== bookingId));
+      } else {
+        setData((prev) =>
+          prev.map((item) => ((item.id || item._id) === bookingId ? { ...item, status } : item))
+        );
+      }
       if (status === "ACCEPTED" || status === "ON_THE_WAY") {
         nav(`/worker/jobs/${bookingId}`);
       }
@@ -185,7 +190,7 @@ export default function Jobs() {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
+                <div className="mt-5 grid gap-2.5 sm:grid-cols-3">
                   {b.status === "WORKER_ASSIGNED" && (
                     <>
                       <button
@@ -197,11 +202,19 @@ export default function Jobs() {
                         {isProcessing ? "Accepting..." : "Accept Job"}
                       </button>
                       <button
+                        onClick={() => advance(b, "REJECTED")}
+                        disabled={isProcessing}
+                        className="btn-secondary flex items-center justify-center gap-1.5 border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                      >
+                        <XCircle size={17} />
+                        {isProcessing ? "Rejecting..." : "Reject Job"}
+                      </button>
+                      <button
                         onClick={() => nav(`/worker/jobs/${bookingId}`)}
                         className="btn-secondary flex items-center justify-center gap-1.5 text-xs font-bold"
                       >
                         <Navigation size={15} />
-                        View Map & Details
+                        View Map
                       </button>
                     </>
                   )}
