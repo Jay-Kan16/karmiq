@@ -119,7 +119,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setBooking(null);
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/auth/logout`, {
+      const apiBase = (import.meta.env.VITE_API_URL || "https://karmiq.onrender.com").replace(/\/+$/, "").replace(/\/api$/, "");
+      await fetch(`${apiBase}/api/auth/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token || ""}` }
       });

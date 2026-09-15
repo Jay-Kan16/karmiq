@@ -1,1 +1,91 @@
-import {useEffect,useState} from "react";import {motion} from "framer-motion";import {Send,X} from "lucide-react";import {api} from "../../services/api";export default function ChatModal({bookingId,workerName,onClose}:{bookingId:string;workerName:string;onClose:()=>void}){const[messages,setMessages]=useState<any[]>([]);const[input,setInput]=useState("");const load=()=>{const token=localStorage.getItem("kaamsaathi_token");fetch(`${import.meta.env.VITE_API_URL||"http://localhost:5000/api"}/bookings/${bookingId}/messages`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(x=>x.success&&setMessages(x.data))};useEffect(()=>{load();const id=window.setInterval(load,3000);return()=>clearInterval(id)},[bookingId]);const send=async()=>{if(!input.trim())return;await fetch(`${import.meta.env.VITE_API_URL||"http://localhost:5000/api"}/bookings/${bookingId}/messages`,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${localStorage.getItem("kaamsaathi_token")||""}`},body:JSON.stringify({text:input})});setInput("");load()};return <motion.div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4" initial={{opacity:0}} animate={{opacity:1}}><div className="flex h-[520px] w-full max-w-lg flex-col rounded-3xl bg-white shadow-2xl"><div className="flex justify-between border-b p-4 font-bold">{workerName}<button onClick={onClose}><X/></button></div><div className="flex-1 space-y-2 overflow-auto p-4">{messages.map((m,i)=><div key={m._id||i} className={`max-w-[80%] rounded-xl p-3 text-sm ${m.senderId?.role==="customer"?"ml-auto bg-brand-600 text-white":"bg-slate-100"}`}>{m.text}</div>)}</div><div className="flex gap-2 border-t p-3"><input className="input" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Type a message"/><button className="btn-primary px-4" onClick={send}><Send size={17}/></button></div></div></motion.div>}
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Send, X } from "lucide-react";
+import { api } from "../../services/api";
+
+const API_BASE = (import.meta.env.VITE_API_URL || "https://karmiq.onrender.com").replace(/\/+$/, "").replace(/\/api$/, "");
+
+export default function ChatModal({
+  bookingId,
+  workerName,
+  onClose,
+}: {
+  bookingId: string;
+  workerName: string;
+  onClose: () => void;
+}) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+
+  const load = () => {
+    const token = localStorage.getItem("kaamsaathi_token");
+    fetch(`${API_BASE}/api/bookings/${bookingId}/messages`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((x) => x.success && setMessages(x.data));
+  };
+
+  useEffect(() => {
+    load();
+    const id = window.setInterval(load, 3000);
+    return () => clearInterval(id);
+  }, [bookingId]);
+
+  const send = async () => {
+    if (!input.trim()) return;
+    await fetch(`${API_BASE}/api/bookings/${bookingId}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("kaamsaathi_token") || ""}`,
+      },
+      body: JSON.stringify({ text: input }),
+    });
+    setInput("");
+    load();
+  };
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <div className="flex h-[520px] w-full max-w-lg flex-col rounded-3xl bg-white shadow-2xl">
+        <div className="flex justify-between border-b p-4 font-bold">
+          {workerName}
+          <button onClick={onClose}>
+            <X />
+          </button>
+        </div>
+        <div className="flex-1 space-y-2 overflow-auto p-4">
+          {messages.map((m, i) => (
+            <div
+              key={m._id || i}
+              className={`max-w-[80%] rounded-xl p-3 text-sm ${
+                m.senderId?.role === "customer"
+                  ? "ml-auto bg-brand-600 text-white"
+                  : "bg-slate-100"
+              }`}
+            >
+              {m.text}
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2 border-t p-3">
+          <input
+            className="input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Type a message"
+          />
+          <button className="btn-primary px-4" onClick={send}>
+            <Send size={17} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}

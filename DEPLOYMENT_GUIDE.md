@@ -103,5 +103,5 @@ Once Render finishes building:
 - [`render.yaml`](file:///c:/Users/jayesh%20dangi/Downloads/kaamsaathi-real-fullstack/render.yaml) — Render Infrastructure as Code definition.
 - [`package.json`](file:///c:/Users/jayesh%20dangi/Downloads/kaamsaathi-real-fullstack/package.json) — Unified `build:all` and `start` scripts.
 - [`backend/src/app.ts`](file:///c:/Users/jayesh%20dangi/Downloads/kaamsaathi-real-fullstack/backend/src/app.ts) — Static asset hosting, SPA catch-all routing, relaxed Helmet CSP for maps/assets.
-- [`src/services/api.ts`](file:///c:/Users/jayesh%20dangi/Downloads/kaamsaathi-real-fullstack/src/services/api.ts) — Dynamic API base URL (`/api` in production, `localhost:5000/api` in local dev).
+- [`src/services/api.ts`](file:///c:/Users/jayesh%20dangi/Downloads/kaamsaathi-real-fullstack/src/services/api.ts) — Dynamic API base URL (`import.meta.env.VITE_API_URL` or deployed Render URL).
 
