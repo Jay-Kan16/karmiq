@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: kaamsaathi
+    name: karmiq
     runtime: node
     plan: free
     buildCommand: npm run build:all

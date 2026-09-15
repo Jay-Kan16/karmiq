@@ -57,7 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [currentLocation, setCurrentLocationState] = useState<UserLocation>(() => {
     try {
-      const r = localStorage.getItem("kaamsaathi_location");
+      const r = localStorage.getItem("karmiq_location") || localStorage.getItem("kaamsaathi_location");
       return r ? JSON.parse(r) : { address: "", lat: 0, lng: 0 };
     } catch {
       return { address: "", lat: 0, lng: 0 };
@@ -65,7 +65,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   const [language, setLanguageState] = useState<LanguageCode>(() => {
-    return localStorage.getItem("kaamsaathi_language") === "hi" ? "hi" : "en";
+    const l = localStorage.getItem("karmiq_language") || localStorage.getItem("kaamsaathi_language");
+    return l === "hi" ? "hi" : "en";
   });
 
   // Verify and restore session on boot or refresh
@@ -95,8 +96,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setBooking(null);
     };
+    window.addEventListener("karmiq:logout", handleLogout);
     window.addEventListener("kaamsaathi:logout", handleLogout);
-    return () => window.removeEventListener("kaamsaathi:logout", handleLogout);
+    return () => {
+      window.removeEventListener("karmiq:logout", handleLogout);
+      window.removeEventListener("kaamsaathi:logout", handleLogout);
+    };
   }, []);
 
   const loginReal = async (phone: string, password: string) => {
@@ -123,7 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setCurrentLocation = (l: UserLocation) => {
     setCurrentLocationState(l);
-    localStorage.setItem("kaamsaathi_location", JSON.stringify(l));
+    localStorage.setItem("karmiq_location", JSON.stringify(l));
   };
 
   const updateBooking = (p: Partial<Booking>) => setBooking((x) => (x ? { ...x, ...p } : x));
@@ -131,7 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (l: LanguageCode) => {
     setLanguageState(l);
-    localStorage.setItem("kaamsaathi_language", l);
+    localStorage.setItem("karmiq_language", l);
   };
 
   const t = (k: TranslationKey) => translations[language]?.[k] ?? translations.en[k] ?? k;
