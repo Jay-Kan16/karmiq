@@ -12,6 +12,7 @@ import type { Service, Booking } from "../../types";
 export default function NewBooking() {
   const nav = useNavigate();
   const qs = new URLSearchParams(useLocation().search);
+  const serviceParam = qs.get("service");
   const emergency = qs.get("emergency") === "true";
   const {
     selectedService,
@@ -25,7 +26,7 @@ export default function NewBooking() {
   } = useApp();
 
   const [services, setServices] = useState<Service[]>([]);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(serviceParam ? 2 : 1);
   const [location, setLocation] = useState(currentLocation.address);
   const [coords, setCoords] = useState({ lat: currentLocation.lat, lng: currentLocation.lng });
   const [when, setWhen] = useState<"now" | "schedule">("now");
@@ -41,11 +42,21 @@ export default function NewBooking() {
   useEffect(() => {
     api.getServices().then((list) => {
       setServices(list);
+      if (serviceParam) {
+        const found = list.find(
+          (s) => s.id === serviceParam || s.name.toLowerCase() === serviceParam.toLowerCase()
+        );
+        if (found) {
+          setSelectedService(found);
+          setStep(2);
+          return;
+        }
+      }
       if (!selectedService) {
         setSelectedService(list.find((s) => !emergency || s.emergency) || list[0] || null);
       }
     });
-  }, []);
+  }, [serviceParam]);
 
   const service = selectedService || services.find((s) => !emergency || s.emergency);
 
@@ -106,7 +117,15 @@ export default function NewBooking() {
   return (
     <div className="mx-auto max-w-3xl">
       <button
-        onClick={() => (step > 1 ? setStep(step - 1) : nav(-1))}
+        onClick={() => {
+          if (step === 2 && serviceParam) {
+            nav(-1);
+          } else if (step > 1) {
+            setStep(step - 1);
+          } else {
+            nav(-1);
+          }
+        }}
         className="mb-5 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"
       >
         <ArrowLeft size={16} />
@@ -114,13 +133,24 @@ export default function NewBooking() {
       </button>
 
       {step < 4 && (
-        <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-brand-600">
-            {emergency ? t("emergencyHelp") : t("quickBooking")}
-          </p>
-          <h1 className="mt-1 text-3xl font-black">
-            {t("bookA")} {translateService(service.name)}
-          </h1>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-600">
+              {emergency ? t("emergencyHelp") : t("quickBooking")}
+            </p>
+            <h1 className="mt-1 text-3xl font-black">
+              {t("bookA")} {translateService(service.name)}
+            </h1>
+          </div>
+          {step > 1 && (
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="mt-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-brand-600 shadow-xs hover:border-brand-300 hover:bg-brand-50 transition"
+            >
+              Change Service
+            </button>
+          )}
         </div>
       )}
 
@@ -140,8 +170,11 @@ export default function NewBooking() {
               .map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setSelectedService(s)}
-                  className={`rounded-2xl border p-4 text-left transition ${
+                  onClick={() => {
+                    setSelectedService(s);
+                    setStep(2);
+                  }}
+                  className={`rounded-2xl border p-4 text-left transition hover:border-brand-400 hover:shadow-xs ${
                     service.id === s.id ? "border-brand-500 bg-brand-50" : "border-slate-200"
                   }`}
                 >

@@ -1,2 +1,36 @@
-import {useEffect,useState} from "react"; import {useNavigate} from "react-router-dom"; import {motion} from "framer-motion"; import {api} from "../../services/api"; import ServiceCard from "./ServiceCard"; import {useApp} from "../../context/AppContext"; import type {Service} from "../../types";
-export default function ServiceGrid({limit}:{limit?:number}){const nav=useNavigate();const{t}=useApp();const[data,setData]=useState<Service[]>([]);const[loading,setLoading]=useState(true);useEffect(()=>{api.getServices().then(setData).finally(()=>setLoading(false))},[]);if(loading)return <div className="card p-6 text-sm text-slate-500">Loading services…</div>;return <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{data.slice(0,limit).map((s,i)=><motion.div key={s.id||String(i)} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}}><ServiceCard service={s} onClick={()=>{nav(`/booking/new?service=${s.id}`)}}/></motion.div>)}</div>}
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { api } from "../../services/api";
+import ServiceCard from "./ServiceCard";
+import { useApp } from "../../context/AppContext";
+import type { Service } from "../../types";
+
+export default function ServiceGrid({ limit }: { limit?: number }) {
+  const nav = useNavigate();
+  const { setSelectedService } = useApp();
+  const [data, setData] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getServices().then(setData).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="card p-6 text-sm text-slate-500">Loading services…</div>;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {data.slice(0, limit).map((s, i) => (
+        <motion.div key={s.id || String(i)} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <ServiceCard
+            service={s}
+            onClick={() => {
+              setSelectedService(s);
+              nav(`/booking/new?service=${s.id}`);
+            }}
+          />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
