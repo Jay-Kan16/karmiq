@@ -63,7 +63,7 @@ export default function NewBooking() {
     setRadarLoading(true);
     try {
       const list = await api.getNearbyWorkers(service.name, coords.lat, coords.lng);
-      setNearbyWorkers(list || []);
+      setNearbyWorkers((list || []).filter((w: any) => w.availability === "online"));
     } catch (e) {
       console.error("Failed to load nearby workers", e);
       setNearbyWorkers([]);
@@ -257,6 +257,10 @@ export default function NewBooking() {
           workers={nearbyWorkers}
           loading={radarLoading || loading}
           onSelectWorker={async (worker) => {
+            if (worker.availability !== "online") {
+              setError("Selected worker is currently offline.");
+              return;
+            }
             await submit(worker.id);
           }}
           onAutoAssign={async () => {

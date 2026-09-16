@@ -51,7 +51,7 @@ export default function Tracking() {
       const lng = customerCoord?.lng || loc?.coordinates?.[0] || loc?.lng;
       const serviceName = (b?.serviceId as any)?.name || (b as any)?.serviceName || (typeof b?.serviceId === "string" ? b.serviceId : "Service");
       const list = await api.getNearbyWorkers(serviceName, lat, lng);
-      setNearbyWorkers(list || []);
+      setNearbyWorkers((list || []).filter((w: any) => w.availability === "online"));
     } catch (err) {
       console.error("Failed to load nearby workers for reassignment", err);
       setNearbyWorkers([]);
@@ -423,6 +423,10 @@ export default function Tracking() {
               workers={nearbyWorkers}
               loading={radarLoading}
               onSelectWorker={async (w) => {
+                if (w.availability !== "online") {
+                  alert("This worker is currently offline.");
+                  return;
+                }
                 try {
                   const updated = await api.reassignWorker(b.id, w.id);
                   setB(updated as any);
@@ -433,9 +437,10 @@ export default function Tracking() {
                 }
               }}
               onAutoAssign={async () => {
-                if (nearbyWorkers.length > 0) {
+                const online = nearbyWorkers.filter((w) => w.availability === "online");
+                if (online.length > 0) {
                   try {
-                    const updated = await api.reassignWorker(b.id, nearbyWorkers[0].id);
+                    const updated = await api.reassignWorker(b.id, online[0].id);
                     setB(updated as any);
                     setWorker(updated.workerId);
                     setShowScanner(false);

@@ -49,6 +49,9 @@ export default function WorkerRadarScanner({
   onAutoAssign,
   onCancel
 }: WorkerRadarScannerProps) {
+  // Only consider online workers for radar display, recommendation, and assignment
+  const onlineWorkers = (workers || []).filter((w) => w.availability === "online");
+
   const [scanStep, setScanStep] = useState<"scanning" | "found">("scanning");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [assigningWorkerId, setAssigningWorkerId] = useState<string | null>(null);
@@ -65,8 +68,8 @@ export default function WorkerRadarScanner({
 
     const t3 = setTimeout(() => {
       setScanStep("found");
-      if (workers.length > 0) {
-        setSelectedId(workers[0].id);
+      if (onlineWorkers.length > 0) {
+        setSelectedId(onlineWorkers[0].id);
       }
     }, 2200);
 
@@ -75,17 +78,18 @@ export default function WorkerRadarScanner({
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [serviceName, workers]);
+  }, [serviceName, onlineWorkers.length]);
 
   const handleSelect = (w: NearbyWorker) => {
+    if (w.availability !== "online") return;
     setAssigningWorkerId(w.id);
     onSelectWorker(w);
   };
 
   const handleAuto = () => {
-    if (workers.length > 0) {
-      setAssigningWorkerId(workers[0].id);
-      onSelectWorker(workers[0]);
+    if (onlineWorkers.length > 0) {
+      setAssigningWorkerId(onlineWorkers[0].id);
+      onSelectWorker(onlineWorkers[0]);
     } else {
       onAutoAssign();
     }
@@ -175,8 +179,8 @@ export default function WorkerRadarScanner({
 
         {/* Discovered Worker Blips on Radar */}
         {scanStep === "found" &&
-          workers.map((w, idx) => {
-            const pos = getBlipPos(idx, workers.length, w.distance);
+          onlineWorkers.map((w, idx) => {
+            const pos = getBlipPos(idx, onlineWorkers.length, w.distance);
             const isSelected = selectedId === w.id;
             return (
               <motion.button
@@ -226,7 +230,7 @@ export default function WorkerRadarScanner({
           <>
             <CheckCircle2 size={15} className="text-emerald-400" />
             <span>
-              <b className="text-emerald-300">{workers.length} verified workers</b> found nearby! Select a worker below to assign your job.
+              <b className="text-emerald-300">{onlineWorkers.length} verified online {onlineWorkers.length === 1 ? "worker" : "workers"}</b> found nearby! Select a worker below to assign your job.
             </span>
           </>
         )}
@@ -241,7 +245,7 @@ export default function WorkerRadarScanner({
             className="space-y-3"
           >
             {/* Quick Auto-Assign Banner */}
-            {workers.length > 0 && (
+            {onlineWorkers.length > 0 && (
               <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5 sm:p-4">
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-600 text-white shadow-sm">
@@ -252,7 +256,7 @@ export default function WorkerRadarScanner({
                       Recommended Match
                     </p>
                     <p className="text-sm font-bold text-slate-800">
-                      Auto-assign {workers[0].name} ({workers[0].distance} km away)
+                      Auto-assign {onlineWorkers[0].name} ({onlineWorkers[0].distance} km away)
                     </p>
                   </div>
                 </div>
@@ -261,7 +265,7 @@ export default function WorkerRadarScanner({
                   disabled={Boolean(assigningWorkerId)}
                   className="btn-primary flex items-center gap-1 px-3.5 py-2 text-xs"
                 >
-                  {assigningWorkerId === workers[0].id ? (
+                  {assigningWorkerId === onlineWorkers[0].id ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
                       Assigning…
@@ -278,7 +282,7 @@ export default function WorkerRadarScanner({
 
             {/* Individual Worker Cards */}
             <div className="space-y-2.5">
-              {workers.map((w) => {
+              {onlineWorkers.map((w) => {
                 const isSelected = selectedId === w.id;
                 const isAssigning = assigningWorkerId === w.id;
                 return (
@@ -365,11 +369,14 @@ export default function WorkerRadarScanner({
                 );
               })}
 
-              {workers.length === 0 && !dataLoading && (
+              {onlineWorkers.length === 0 && !dataLoading && (
                 <div className="card p-8 text-center text-slate-500">
-                  <p className="font-bold text-slate-800">No active workers found in this exact skill right now.</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    You can still place the booking and our background matching service will assign the first available partner.
+                  <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-amber-600">
+                    <Radio size={24} className="animate-pulse" />
+                  </div>
+                  <p className="font-bold text-slate-800">No online workers available right now</p>
+                  <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+                    All service partners for this skill are currently offline. You can still place an open booking request and our auto-matching system will assign the first partner who comes online.
                   </p>
                   <button onClick={onAutoAssign} className="btn-primary mt-4">
                     Place Open Booking Request
