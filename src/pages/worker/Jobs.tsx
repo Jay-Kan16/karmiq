@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
+import { openGoogleMapsRoute, getGoogleMapsDirectionsUrl } from "../../utils/maps";
 
 export default function Jobs() {
   const nav = useNavigate();
@@ -22,6 +23,7 @@ export default function Jobs() {
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [selectedBookingForExtra, setSelectedBookingForExtra] = useState<any | null>(null);
+  const [workerCoord, setWorkerCoord] = useState<{ lat: number; lng: number } | undefined>();
 
   const loadJobs = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -61,6 +63,17 @@ export default function Jobs() {
     const onFocus = () => fetchJobs();
     window.addEventListener("focus", onFocus);
 
+    // Fetch worker GPS coordinates for navigation
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setWorkerCoord({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+
     return () => {
       active = false;
       clearInterval(timer);
@@ -70,6 +83,13 @@ export default function Jobs() {
 
   const advance = async (b: any, status: string) => {
     const bookingId = b.id || b._id;
+
+    // Immediately open Google Maps route on user click when starting journey
+    let mapsWindow: Window | null = null;
+    if (status === "ON_THE_WAY") {
+      mapsWindow = openGoogleMapsRoute(b, workerCoord);
+    }
+
     setActionLoadingId(bookingId);
     try {
       await api.updateBookingStatus(bookingId, status as any);
@@ -84,6 +104,7 @@ export default function Jobs() {
         nav(`/worker/jobs/${bookingId}`);
       }
     } catch (e) {
+      if (mapsWindow) mapsWindow.close();
       alert(e instanceof Error ? e.message : "Unable to update job");
     } finally {
       setActionLoadingId(null);
@@ -164,10 +185,24 @@ export default function Jobs() {
                       </span>
                     </div>
 
-                    <p className="mt-1.5 flex items-center text-sm font-medium text-slate-600">
-                      <MapPin className="mr-1.5 inline shrink-0 text-brand-600" size={15} />
-                      {address}
-                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600">
+                      <span className="flex items-center">
+                        <MapPin className="mr-1.5 inline shrink-0 text-brand-600" size={15} />
+                        {address}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openGoogleMapsRoute(b, workerCoord);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition shadow-2xs"
+                        title="Open directions to customer in Google Maps"
+                      >
+                        <Navigation size={12} className="text-blue-600" />
+                        Maps Route ↗
+                      </button>
+                    </div>
                   </div>
 
                   <div className="text-left sm:text-right">
@@ -226,10 +261,10 @@ export default function Jobs() {
                       <button
                         onClick={() => advance(b, "ON_THE_WAY")}
                         disabled={isProcessing}
-                        className="btn-primary flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700"
+                        className="btn-primary col-span-2 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 font-bold shadow-md shadow-blue-600/20"
                       >
                         <Navigation size={17} />
-                        {isProcessing ? "Updating..." : "Start Journey (On The Way)"}
+                        {isProcessing ? "Starting Journey..." : "Start Journey (On The Way) & Open Maps"}
                       </button>
                       <button
                         onClick={() => nav(`/worker/jobs/${bookingId}`)}
@@ -241,14 +276,23 @@ export default function Jobs() {
                   )}
 
                   {["ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status) && (
-                    <button
-                      onClick={() => nav(`/worker/jobs/${bookingId}`)}
-                      className="btn-primary col-span-2 flex items-center justify-center gap-1.5"
-                    >
-                      <Navigation size={17} />
-                      Open Active Job Screen
-                      <ChevronRight size={17} />
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openGoogleMapsRoute(b, workerCoord)}
+                        className="btn-primary flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                      >
+                        <Navigation size={16} />
+                        Route to Customer (Google Maps) ↗
+                      </button>
+                      <button
+                        onClick={() => nav(`/worker/jobs/${bookingId}`)}
+                        className="btn-secondary col-span-2 flex items-center justify-center gap-1.5 font-bold text-xs"
+                      >
+                        Open Active Job Screen
+                        <ChevronRight size={16} />
+                      </button>
+                    </>
                   )}
 
                   {["ACCEPTED", "ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status) && (

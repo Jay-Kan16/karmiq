@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { MapPin, Phone, ArrowLeft, PlusCircle, Receipt, Clock, CheckCircle2 } from "lucide-react";
+import { MapPin, Phone, ArrowLeft, PlusCircle, Receipt, Clock, CheckCircle2, Navigation } from "lucide-react";
 import MapView from "../../components/map/MapView";
 import { api } from "../../services/api";
 import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
+import { openGoogleMapsRoute, getGoogleMapsDirectionsUrl } from "../../utils/maps";
 
 export default function ActiveJob() {
   const { id } = useParams();
@@ -36,8 +37,17 @@ export default function ActiveJob() {
 
   const update = async () => {
     if (next) {
-      const updated = await api.updateBookingStatus(b._id || b.id, next);
-      setB(updated);
+      let mapsWindow: Window | null = null;
+      if (next === "ON_THE_WAY") {
+        mapsWindow = openGoogleMapsRoute(b, workerCoord);
+      }
+      try {
+        const updated = await api.updateBookingStatus(b._id || b.id, next);
+        setB(updated);
+      } catch (err) {
+        if (mapsWindow) mapsWindow.close();
+        alert(err instanceof Error ? err.message : "Failed to update status");
+      }
     }
   };
 
@@ -60,9 +70,20 @@ export default function ActiveJob() {
       </Link>
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_.8fr]">
-        <div className="card overflow-hidden">
+        <div className="card relative overflow-hidden">
           <div className="h-[55vh] min-h-[420px]">
             <MapView customerMarker={c} workerMarker={workerCoord} />
+          </div>
+          {/* Floating Google Maps navigation shortcut */}
+          <div className="absolute top-3 right-3 z-[1000]">
+            <button
+              type="button"
+              onClick={() => openGoogleMapsRoute(b, workerCoord)}
+              className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white/95 px-3 py-2 text-xs font-black text-blue-700 shadow-md backdrop-blur transition hover:bg-blue-50 active:scale-95"
+            >
+              <Navigation size={14} className="text-blue-600" />
+              Route in Google Maps ↗
+            </button>
           </div>
         </div>
 
@@ -75,14 +96,24 @@ export default function ActiveJob() {
             </p>
             <p className="mt-4 font-bold text-slate-900">Customer: {b.customerId?.name}</p>
 
-            {b.customerId?.phone && (
-              <a
-                className="btn-secondary mt-3 flex items-center justify-center gap-2 w-full text-xs font-bold"
-                href={`tel:${b.customerId.phone}`}
+            <div className="mt-3 space-y-2">
+              {b.customerId?.phone && (
+                <a
+                  className="btn-secondary flex items-center justify-center gap-2 w-full text-xs font-bold"
+                  href={`tel:${b.customerId.phone}`}
+                >
+                  <Phone size={15} /> Call customer
+                </a>
+              )}
+
+              <button
+                type="button"
+                onClick={() => openGoogleMapsRoute(b, workerCoord)}
+                className="btn-primary flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-xs font-black text-white shadow-sm py-2.5"
               >
-                <Phone size={15} /> Call customer
-              </a>
-            )}
+                <Navigation size={15} /> Open Route in Google Maps ↗
+              </button>
+            </div>
 
             {/* Bill & Extra Charges Box */}
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -119,7 +150,9 @@ export default function ActiveJob() {
 
             {next && (
               <button onClick={update} className="btn-primary mt-4 w-full py-3 font-black">
-                {next.replaceAll("_", " ")}
+                {next === "ON_THE_WAY"
+                  ? "Start Journey (On The Way) & Open Maps"
+                  : next.replaceAll("_", " ")}
               </button>
             )}
           </div>
