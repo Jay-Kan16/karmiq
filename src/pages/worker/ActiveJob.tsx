@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { MapPin, Phone, ArrowLeft, PlusCircle, Receipt, Clock, CheckCircle2, Navigation } from "lucide-react";
+import { MapPin, ArrowLeft, PlusCircle, Navigation, ShieldCheck, MessageSquare } from "lucide-react";
 import MapView from "../../components/map/MapView";
 import { api } from "../../services/api";
 import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
+import ChatModal from "../../components/chat/ChatModal";
 import { openGoogleMapsRoute, getGoogleMapsDirectionsUrl } from "../../utils/maps";
 
 export default function ActiveJob() {
@@ -11,6 +12,7 @@ export default function ActiveJob() {
   const [b, setB] = useState<any>();
   const [workerCoord, setWorkerCoord] = useState<{ lat: number; lng: number } | undefined>();
   const [showExtraModal, setShowExtraModal] = useState(false);
+  const [chat, setChat] = useState(false);
 
   useEffect(() => {
     (id ? api.getBooking(id) : api.getActiveWorkerJob()).then(setB).catch(() => {});
@@ -97,14 +99,20 @@ export default function ActiveJob() {
             <p className="mt-4 font-bold text-slate-900">Customer: {b.customerId?.name}</p>
 
             <div className="mt-3 space-y-2">
-              {b.customerId?.phone && (
-                <a
-                  className="btn-secondary flex items-center justify-center gap-2 w-full text-xs font-bold"
-                  href={`tel:${b.customerId.phone}`}
-                >
-                  <Phone size={15} /> Call customer
-                </a>
-              )}
+              <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2 text-xs">
+                <span className="flex items-center gap-1.5 font-bold text-emerald-800">
+                  <ShieldCheck size={16} className="text-emerald-600" /> Customer Privacy Shield
+                </span>
+                <span className="font-bold text-slate-500 text-[11px]">Number Masked</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setChat(true)}
+                className="btn-secondary flex items-center justify-center gap-2 w-full text-xs font-bold text-slate-700 hover:text-brand-600 hover:bg-slate-100 py-2.5"
+              >
+                <MessageSquare size={15} className="text-brand-600" /> In-App Chat with Customer
+              </button>
 
               <button
                 type="button"
@@ -168,6 +176,14 @@ export default function ActiveJob() {
           currentExtra={extra}
           onClose={() => setShowExtraModal(false)}
           onSuccess={(updated) => setB(updated)}
+        />
+      )}
+
+      {chat && (
+        <ChatModal
+          bookingId={b._id || b.id}
+          workerName={b.customerId?.name || "Customer"}
+          onClose={() => setChat(false)}
         />
       )}
     </div>

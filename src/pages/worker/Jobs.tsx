@@ -9,7 +9,8 @@ import {
   AlertCircle,
   Sparkles,
   ChevronRight,
-  XCircle
+  XCircle,
+  ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
@@ -152,7 +153,6 @@ export default function Jobs() {
             const isProcessing = actionLoadingId === bookingId;
             const address = b.location?.address || "Customer Location";
             const customerName = b.customerId?.name || "Customer";
-            const customerPhone = b.customerId?.phone;
             const fare = b.fare || 0;
 
             return (
@@ -217,11 +217,11 @@ export default function Jobs() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm">
-                  <div className="text-slate-600">
-                    Customer: <span className="font-bold text-slate-900">{customerName}</span>
-                    {customerPhone && (
-                      <span className="ml-2 text-xs text-slate-400">({customerPhone})</span>
-                    )}
+                  <div className="text-slate-600 flex items-center gap-1.5 flex-wrap">
+                    <span>Customer: <b className="font-bold text-slate-900">{customerName}</b></span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      <ShieldCheck size={11} className="text-emerald-600" /> Number Masked
+                    </span>
                   </div>
                   <span className="text-xs text-slate-400">ID: #{String(bookingId).slice(-6)}</span>
                 </div>

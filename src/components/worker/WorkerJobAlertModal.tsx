@@ -12,7 +12,8 @@ import {
   X,
   XCircle,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useApp } from "../../context/AppContext";
@@ -158,7 +159,6 @@ export default function WorkerJobAlertModal() {
     incomingJob.serviceId?.name || incomingJob.serviceName || "Service";
   const customerName =
     incomingJob.customerId?.name || "Customer";
-  const customerPhone = incomingJob.customerId?.phone;
   const address =
     incomingJob.location?.address || "Customer specified location";
   const distance = incomingJob.distance || 1.2;
@@ -238,14 +238,12 @@ export default function WorkerJobAlertModal() {
               <span className="font-bold text-slate-900 text-sm">{customerName}</span>
             </div>
 
-            {customerPhone && (
-              <div className="flex items-center justify-between border-t border-slate-200/50 pt-2">
-                <span className="text-slate-400 text-[10px] uppercase font-bold">Phone</span>
-                <span className="flex items-center gap-1 font-bold text-slate-800">
-                  <Phone size={12} className="text-brand-600" /> {customerPhone}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between border-t border-slate-200/50 pt-2">
+              <span className="text-slate-400 text-[10px] uppercase font-bold">Customer Contact</span>
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/80 text-[11px]">
+                <ShieldCheck size={12} className="text-emerald-600" /> Number Masked (Private Bridge)
+              </span>
+            </div>
 
             <div className="flex items-start justify-between border-t border-slate-200/50 pt-2">
               <span className="text-slate-400 text-[10px] uppercase font-bold shrink-0">
