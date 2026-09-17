@@ -5,12 +5,16 @@ import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import BookingStepper from "../../components/booking/BookingStepper";
 import StatusBadge from "../../components/common/StatusBadge";
+import CallModal from "../../components/chat/CallModal";
+import ChatModal from "../../components/chat/ChatModal";
 
 export default function BookingDetails() {
   const { id } = useParams();
   const nav = useNavigate();
   const { user, t, translateService } = useApp();
   const [b, setB] = useState<any>();
+  const [call, setCall] = useState(false);
+  const [chat, setChat] = useState(false);
 
   useEffect(() => {
     if (id) api.getBooking(id).then(setB);
@@ -47,11 +51,19 @@ export default function BookingDetails() {
               <p className="text-sm text-slate-500">{w.userId?.phone}</p>
               <div className="mt-3 flex gap-2">
                 {w.userId?.phone && (
-                  <a className="btn-secondary px-3 py-2 text-xs font-bold" href={`tel:${w.userId?.phone}`}>
+                  <button
+                    type="button"
+                    onClick={() => setCall(true)}
+                    className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-bold"
+                  >
                     <Phone size={15} /> Call
-                  </a>
+                  </button>
                 )}
-                <button className="btn-secondary px-3 py-2 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setChat(true)}
+                  className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-bold"
+                >
                   <MessageCircle size={15} /> Message
                 </button>
               </div>
@@ -107,6 +119,22 @@ export default function BookingDetails() {
           </Link>
         </div>
       </div>
+
+      {call && w?.userId?.phone && (
+        <CallModal
+          phone={w.userId.phone}
+          name={w.userId.name || "Worker"}
+          onClose={() => setCall(false)}
+        />
+      )}
+
+      {chat && (
+        <ChatModal
+          bookingId={bookingId}
+          workerName={w?.userId?.name || "Worker"}
+          onClose={() => setChat(false)}
+        />
+      )}
     </div>
   );
 }
