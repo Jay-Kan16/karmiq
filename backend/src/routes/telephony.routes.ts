@@ -79,6 +79,7 @@ r.post("/sessions", auth, async (req: AuthRequest, res, next) => {
       data: {
         sessionId: session._id,
         virtualNumber: session.virtualNumber,
+        isConfigured: plivoService.isConfigured(),
         status: session.status,
         expiresAt: session.expiresAt,
         role: isCustomer ? "customer" : "technician",
@@ -103,6 +104,7 @@ r.get("/sessions/:bookingId", auth, async (req: AuthRequest, res, next) => {
       data: {
         sessionId: session._id,
         virtualNumber: session.virtualNumber,
+        isConfigured: plivoService.isConfigured(),
         status: session.status,
         expiresAt: session.expiresAt,
       },

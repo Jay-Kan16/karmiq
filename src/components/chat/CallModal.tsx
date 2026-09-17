@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Phone, X, ShieldCheck, Copy, Check, Lock, Loader2, Sparkles } from "lucide-react";
+import { Phone, X, ShieldCheck, Copy, Check, Lock, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { api } from "../../services/api";
 
 export default function CallModal({
@@ -43,6 +43,7 @@ export default function CallModal({
     };
   }, [bookingId]);
 
+  const isConfigured = Boolean(session?.isConfigured);
   const virtualNumber = session?.virtualNumber || "+918000000000";
   const cleanPhone = (phone || "").replace(/[^\d+]/g, "");
   const maskedDialString = `#31#${cleanPhone}`;
@@ -78,64 +79,110 @@ export default function CallModal({
           <ShieldCheck size={13} className="text-emerald-600" /> Private Masked Calling
         </div>
 
-        {/* PRIMARY OPTION: PLIVO VIRTUAL NUMBER CALLING */}
-        <div className="mt-4 rounded-2xl border-2 border-emerald-400/80 bg-gradient-to-b from-emerald-50 to-white p-4 text-left shadow-sm">
-          <div className="flex items-start gap-2.5">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-emerald-600 text-white shadow-sm">
-              <Sparkles size={14} />
-            </span>
-            <div>
-              <p className="text-xs font-black text-emerald-950">Plivo Masked Virtual Bridge</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-800">
-                Call through KarmiK's secure virtual number. Neither party's phone number is ever revealed.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-3.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-white px-3 py-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Virtual Bridge Number</p>
-              <p className="font-mono text-xs font-black text-slate-900">
-                {loading ? "Connecting bridge..." : virtualNumber}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleCopy(virtualNumber)}
-              disabled={loading}
-              className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-            >
-              {copied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-              {copied ? "Copied" : "Copy"}
-            </button>
-          </div>
-
-          <a
-            href={`tel:${virtualNumber}`}
-            className="btn-primary mt-3 flex w-full items-center justify-center gap-2 bg-emerald-600 py-3 text-xs font-black text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700"
-          >
-            {loading ? <Loader2 size={15} className="animate-spin" /> : <Phone size={15} />}
-            Call via Plivo Virtual Bridge
-          </a>
-        </div>
-
-        {/* SECONDARY OPTION: #31# CELLULAR CALL (If phone number provided) */}
-        {cleanPhone && (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-left">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                <Lock size={12} className="text-slate-500" /> Cellular Dialing with #31#
+        {/* CASE 1: REAL PLIVO VIRTUAL NUMBER IS CONFIGURED */}
+        {isConfigured ? (
+          <div className="mt-4 rounded-2xl border-2 border-emerald-400/80 bg-gradient-to-b from-emerald-50 to-white p-4 text-left shadow-sm">
+            <div className="flex items-start gap-2.5">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                <Sparkles size={14} />
               </span>
-              <a
-                href={maskedTelUri}
-                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100"
-              >
-                Dial #31#
-              </a>
+              <div>
+                <p className="text-xs font-black text-emerald-950">Plivo Masked Virtual Bridge</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-800">
+                  Call through KarmiK's secure virtual number. Neither party's phone number is ever revealed.
+                </p>
+              </div>
             </div>
-            <p className="mt-1 text-[10px] text-slate-500 leading-tight">
-              Suppresses Caller ID on GSM network. Masked string: <span className="font-mono font-bold text-slate-800">{maskedDialString}</span>
-            </p>
+
+            <div className="mt-3.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-white px-3 py-2">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Virtual Bridge Number</p>
+                <p className="font-mono text-xs font-black text-slate-900">
+                  {loading ? "Connecting bridge..." : virtualNumber}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCopy(virtualNumber)}
+                disabled={loading}
+                className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+              >
+                {copied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
+
+            <a
+              href={`tel:${virtualNumber}`}
+              className="btn-primary mt-3 flex w-full items-center justify-center gap-2 bg-emerald-600 py-3 text-xs font-black text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700"
+            >
+              {loading ? <Loader2 size={15} className="animate-spin" /> : <Phone size={15} />}
+              Call via Plivo Virtual Bridge
+            </a>
+          </div>
+        ) : (
+          /* CASE 2: PLIVO NOT YET CONFIGURED -> SHOW #31# DIRECT MASKING & GUIDANCE */
+          <div className="mt-4 space-y-3">
+            <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-3.5 text-left">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+                <div>
+                  <p className="text-xs font-black text-amber-950">Plivo Virtual Number Pending</p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-amber-800">
+                    Real Plivo number is not yet added in Render environment. Use <b>#31# Masked Dialing</b> below to place an actual call right now while suppressing your Caller ID.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {cleanPhone ? (
+              <div className="rounded-2xl border-2 border-emerald-400/80 bg-gradient-to-b from-emerald-50 to-white p-4 text-left shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-black text-slate-900 flex items-center gap-1">
+                      <Lock size={13} className="text-emerald-600" /> Dial with #31# Masking
+                    </span>
+                    <p className="mt-0.5 text-[11px] text-slate-600">
+                      Suppresses your Caller ID on your mobile network.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-200 bg-white px-3 py-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Masked Dial String</p>
+                    <p className="font-mono text-xs font-black text-slate-900">{maskedDialString}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(maskedDialString)}
+                    className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    {copied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+
+                <a
+                  href={maskedTelUri}
+                  className="btn-primary mt-3 flex w-full items-center justify-center gap-2 bg-emerald-600 py-3 text-xs font-black text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700"
+                >
+                  <Lock size={14} /> Call with #31# Masking
+                </a>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {/* Fallback standard call link */}
+        {cleanPhone && isConfigured && (
+          <div className="mt-3 pt-2">
+            <a
+              href={maskedTelUri}
+              className="text-center text-[11px] font-semibold text-slate-500 hover:text-slate-700 underline"
+            >
+              Alternative: Dial directly with #31# prefix
+            </a>
           </div>
         )}
       </div>

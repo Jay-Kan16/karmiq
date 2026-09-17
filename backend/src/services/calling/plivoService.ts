@@ -52,6 +52,15 @@ export class PlivoService {
     return this.plivoNumber;
   }
 
+  isConfigured(): boolean {
+    return Boolean(
+      this.authId &&
+      this.authToken &&
+      this.plivoNumber &&
+      this.plivoNumber !== "+918000000000"
+    );
+  }
+
   /**
    * Get an existing active call session for a booking or create a new one.
    */
