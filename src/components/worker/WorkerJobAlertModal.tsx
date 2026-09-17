@@ -130,7 +130,7 @@ export default function WorkerJobAlertModal() {
     try {
       await api.updateBookingStatus(jobId, "ACCEPTED");
       setIncomingJob(null);
-      nav("/worker/jobs/active");
+      nav(`/worker/jobs/${jobId}`);
     } catch (err: any) {
       alert(err.message || "Failed to accept booking");
     } finally {

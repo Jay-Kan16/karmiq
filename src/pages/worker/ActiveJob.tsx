@@ -17,7 +17,27 @@ export default function ActiveJob() {
   const [call, setCall] = useState(false);
 
   useEffect(() => {
-    (id ? api.getBooking(id) : api.getActiveWorkerJob()).then(setB).catch(() => {});
+    let active = true;
+    const load = () => {
+      (id ? api.getBooking(id) : api.getActiveWorkerJob())
+        .then((res) => {
+          if (active && res) setB(res);
+        })
+        .catch(() => {});
+    };
+
+    load();
+    const timer = setInterval(load, 3000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [id]);
 
   useEffect(() => {
