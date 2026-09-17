@@ -46,6 +46,7 @@ const workerNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { rawLabel: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { rawLabel: "App Earnings", path: "/admin/earnings", icon: Wallet },
   { rawLabel: "Workers", path: "/admin/workers", icon: Users },
   { rawLabel: "Verification", path: "/admin/verification", icon: FileCheck2 },
   { rawLabel: "Bookings", path: "/admin/bookings", icon: ClipboardList },

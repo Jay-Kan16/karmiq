@@ -26,6 +26,7 @@ import Earnings from "./pages/worker/Earnings";
 import Welfare from "./pages/worker/Welfare";
 import WorkerProfile from "./pages/worker/Profile";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminEarnings from "./pages/admin/Earnings";
 import AdminWorkers from "./pages/admin/Workers";
 import Verification from "./pages/admin/Verification";
 import AdminBookings from "./pages/admin/Bookings";
@@ -83,6 +84,7 @@ export default function App() {
         <Route element={<ProtectedRoute role="admin" />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/earnings" element={<AdminEarnings />} />
             <Route path="/admin/workers" element={<AdminWorkers />} />
             <Route path="/admin/verification" element={<Verification />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
