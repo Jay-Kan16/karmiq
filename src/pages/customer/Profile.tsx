@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Home, Languages, LogOut, MapPin, Shield, Wallet, X, Phone, CreditCard, AlertCircle, Receipt, Navigation, Clock3, MessageSquare, CheckCircle2 } from "lucide-react";
+import { Check, ChevronRight, Home, Languages, LogOut, MapPin, Shield, Wallet, X, Phone, CreditCard, AlertCircle, Receipt, Navigation, Clock3, MessageSquare, CheckCircle2, CalendarDays, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -17,6 +17,7 @@ export default function Profile() {
   const [busyBookings, setBusyBookings] = useState<any[]>([]);
   const [extraChargeBookings, setExtraChargeBookings] = useState<any[]>([]);
   const [activeBookings, setActiveBookings] = useState<any[]>([]);
+  const [scheduledBookings, setScheduledBookings] = useState<any[]>([]);
   const [completedPendingPayment, setCompletedPendingPayment] = useState<any[]>([]);
   const [callModalBooking, setCallModalBooking] = useState<any | null>(null);
   const [chatModalBooking, setChatModalBooking] = useState<any | null>(null);
@@ -38,9 +39,18 @@ export default function Profile() {
           const extraList = list.filter((b: any) => (b.extraCharges || 0) > 0 && b.status !== "CANCELLED");
           setExtraChargeBookings(extraList);
 
-          // Active in-progress journey bookings
+          // Upcoming scheduled bookings
+          const scheduled = list.filter((b: any) =>
+            (b.status === "SCHEDULED" || b.scheduledDate) &&
+            !["COMPLETED", "CANCELLED", "REJECTED", "ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status)
+          );
+          setScheduledBookings(scheduled);
+
+          // Active in-progress journey bookings (live only)
           const activeList = list.filter((b: any) =>
-            ["MATCHING", "WORKER_ASSIGNED", "ACCEPTED", "ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status)
+            ["MATCHING", "WORKER_ASSIGNED", "ACCEPTED", "ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status) &&
+            b.status !== "SCHEDULED" &&
+            (!b.scheduledDate || ["ON_THE_WAY", "ARRIVED", "SERVICE_STARTED"].includes(b.status))
           );
           setActiveBookings(activeList);
 
@@ -190,6 +200,72 @@ export default function Profile() {
               >
                 <Navigation size={14} />
                 Open Live Tracking & Map ↗
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UPCOMING SCHEDULED APPOINTMENTS */}
+      {scheduledBookings.length > 0 && (
+        <div className="mt-4 overflow-hidden rounded-3xl border-2 border-purple-200/90 bg-white p-5 shadow-lg shadow-purple-500/5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-purple-50 text-purple-700 shadow-2xs">
+                <CalendarDays size={18} />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-slate-900">
+                    Upcoming Scheduled Service
+                  </h3>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[10px] font-black text-purple-700 uppercase tracking-wide">
+                    Confirmed
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Booking #{String(scheduledBookings[0]._id || scheduledBookings[0].id).slice(-6)}
+                </p>
+              </div>
+            </div>
+            <StatusBadge status={scheduledBookings[0].status} />
+          </div>
+
+          <div className="mt-3.5 rounded-2xl bg-purple-50/60 p-4 border border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase text-purple-800 tracking-wider">Scheduled Appointment Slot</p>
+              <p className="text-sm font-black text-purple-950 flex items-center gap-1.5">
+                <Clock size={15} className="text-purple-700" />
+                {scheduledBookings[0].scheduledDate} • {scheduledBookings[0].scheduledTime || "Flexible Window"}
+              </p>
+              <p className="text-xs text-purple-900 font-medium">
+                Service: <b>{translateService(scheduledBookings[0].serviceId?.name || scheduledBookings[0].serviceName)}</b>
+              </p>
+            </div>
+
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Total Fare</span>
+              <p className="text-lg font-black text-slate-900">₹{scheduledBookings[0].fare}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-2">
+            <p className="text-xs text-slate-500 flex items-center gap-1">
+              <MapPin size={12} className="text-slate-400" />
+              <span className="truncate max-w-xs">{scheduledBookings[0].location?.address}</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => nav("/customer/bookings?tab=scheduled")}
+                className="btn-secondary px-3.5 py-2 text-xs font-bold text-slate-700"
+              >
+                All Scheduled ({scheduledBookings.length})
+              </button>
+              <button
+                onClick={() => nav(`/booking/${scheduledBookings[0]._id || scheduledBookings[0].id}`)}
+                className="btn-primary bg-purple-600 hover:bg-purple-700 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/20"
+              >
+                View Appointment ↗
               </button>
             </div>
           </div>

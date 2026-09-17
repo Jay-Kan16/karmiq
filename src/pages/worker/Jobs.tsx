@@ -10,7 +10,8 @@ import {
   Sparkles,
   ChevronRight,
   XCircle,
-  ShieldCheck
+  ShieldCheck,
+  CalendarDays
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
@@ -160,11 +161,16 @@ export default function Jobs() {
                 key={bookingId}
                 className="card relative overflow-hidden border-2 border-slate-200 p-5 transition hover:border-brand-400 hover:shadow-md sm:p-6"
               >
-                {b.emergency && (
+                {b.status === "SCHEDULED" ? (
+                  <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-black text-purple-900 border border-purple-200">
+                    <CalendarDays size={13} className="text-purple-700" />
+                    📅 Scheduled: {b.scheduledDate} • {b.scheduledTime || "Flexible Slot"}
+                  </div>
+                ) : b.emergency ? (
                   <div className="mb-3 inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-black text-red-700">
                     <AlertCircle size={13} /> Emergency Priority
                   </div>
-                )}
+                ) : null}
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -174,7 +180,9 @@ export default function Jobs() {
                       </h2>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-black ${
-                          b.status === "WORKER_ASSIGNED"
+                          b.status === "SCHEDULED"
+                            ? "bg-purple-100 text-purple-800 border border-purple-200"
+                            : b.status === "WORKER_ASSIGNED"
                             ? "bg-amber-100 text-amber-800"
                             : b.status === "ACCEPTED"
                             ? "bg-blue-100 text-blue-800"
@@ -228,6 +236,34 @@ export default function Jobs() {
 
                 {/* Actions */}
                 <div className="mt-5 grid gap-2.5 sm:grid-cols-3">
+                  {b.status === "SCHEDULED" && (
+                    <>
+                      <button
+                        onClick={() => advance(b, "ACCEPTED")}
+                        disabled={isProcessing}
+                        className="btn-primary flex items-center justify-center gap-1.5 bg-purple-600 hover:bg-purple-700"
+                      >
+                        <CheckCircle2 size={17} />
+                        {isProcessing ? "Confirming..." : "Confirm Schedule Slot"}
+                      </button>
+                      <button
+                        onClick={() => advance(b, "REJECTED")}
+                        disabled={isProcessing}
+                        className="btn-secondary flex items-center justify-center gap-1.5 border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                      >
+                        <XCircle size={17} />
+                        {isProcessing ? "Declining..." : "Decline Slot"}
+                      </button>
+                      <button
+                        onClick={() => nav(`/worker/jobs/${bookingId}`)}
+                        className="btn-secondary flex items-center justify-center gap-1.5 text-xs font-bold"
+                      >
+                        <Navigation size={15} />
+                        View Job Details
+                      </button>
+                    </>
+                  )}
+
                   {b.status === "WORKER_ASSIGNED" && (
                     <>
                       <button

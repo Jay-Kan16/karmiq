@@ -13,7 +13,8 @@ import {
   AlertCircle,
   Radio,
   X,
-  PlusCircle
+  PlusCircle,
+  CalendarDays
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MapView from "../../components/map/MapView";
@@ -171,6 +172,45 @@ export default function Tracking() {
           <Home size={15} /> {t("returnToMainPage")}
         </Link>
       </div>
+
+      {/* Scheduled Appointment Notice */}
+      {(b.status === "SCHEDULED" || b.scheduledDate) && !isCompleted && b.status !== "ON_THE_WAY" && b.status !== "ARRIVED" && b.status !== "SERVICE_STARTED" && (
+        <div className="card mb-5 border-2 border-purple-300 bg-purple-50/80 p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-purple-600 text-white shadow-md shadow-purple-600/20">
+                <CalendarDays size={24} />
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-black uppercase text-purple-800">
+                  Scheduled Service
+                </span>
+                <h2 className="text-lg font-black text-purple-950 mt-0.5">
+                  Confirmed for {b.scheduledDate} • {b.scheduledTime || "Flexible Window"}
+                </h2>
+                <p className="text-xs text-purple-800 mt-0.5 leading-relaxed">
+                  Live dispatch and real-time GPS tracking will activate when your verified cooperative technician departs for your location.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <Link
+                to={`/booking/${id}`}
+                className="btn-secondary px-3.5 py-2 text-xs font-bold text-purple-900 bg-white hover:bg-purple-50 border-purple-200"
+              >
+                Appointment Details
+              </Link>
+              <Link
+                to="/customer/bookings?tab=scheduled"
+                className="btn-primary bg-purple-600 hover:bg-purple-700 px-3.5 py-2 text-xs font-bold text-white shadow-sm"
+              >
+                All Scheduled
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Grid */}
       <div className="grid gap-5 lg:grid-cols-[1.5fr_.7fr]">

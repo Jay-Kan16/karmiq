@@ -262,6 +262,7 @@ export const translations = {
 
     // Stepper & Status Badge
     statusSearching: "Searching",
+    statusScheduled: "Scheduled",
     statusWorkerAssigned: "Worker assigned",
     statusAccepted: "Accepted",
     statusOnTheWay: "Worker on the way",
@@ -529,6 +530,7 @@ export const translations = {
 
     // Stepper & Status Badge
     statusSearching: "खोज रहे हैं",
+    statusScheduled: "निर्धारित",
     statusWorkerAssigned: "कार्यकर्ता आवंटित",
     statusAccepted: "स्वीकृत",
     statusOnTheWay: "कार्यकर्ता रास्ते में है",

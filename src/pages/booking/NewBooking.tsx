@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, MapPin, Radio, Siren, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, Radio, Siren, Sparkles, Zap, CheckCircle2, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LocationSelector from "../../components/location/LocationSelector";
@@ -38,6 +38,7 @@ export default function NewBooking() {
 
   const [nearbyWorkers, setNearbyWorkers] = useState<NearbyWorker[]>([]);
   const [radarLoading, setRadarLoading] = useState(false);
+  const [scheduledSuccessBooking, setScheduledSuccessBooking] = useState<any | null>(null);
 
   useEffect(() => {
     api.getServices().then((list) => {
@@ -64,6 +65,80 @@ export default function NewBooking() {
     return <div className="card p-8 text-center">Loading services…</div>;
   }
 
+  if (scheduledSuccessBooking) {
+    return (
+      <div className="mx-auto max-w-2xl py-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="card overflow-hidden border-2 border-purple-200 bg-white p-6 text-center shadow-xl shadow-purple-500/5 sm:p-8"
+        >
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-purple-100 text-purple-700 shadow-sm">
+            <CheckCircle2 size={36} />
+          </div>
+
+          <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3.5 py-1 text-xs font-black text-purple-700 border border-purple-200/60">
+            <CalendarDays size={14} />
+            Booking Scheduled Successfully
+          </span>
+
+          <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">
+            {translateService(service.name)} Service Booked!
+          </h1>
+          <p className="mx-auto mt-2 max-w-md text-xs text-slate-500 leading-relaxed">
+            Your appointment has been locked in. A verified cooperative technician will arrive during your selected window.
+          </p>
+
+          <div className="mx-auto mt-6 max-w-md rounded-2xl bg-slate-50 border border-slate-100 p-4 text-left space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-500">Scheduled Slot</span>
+              <span className="font-black text-purple-900 flex items-center gap-1.5 bg-purple-100/70 px-2.5 py-1 rounded-lg">
+                <Clock size={13} className="text-purple-700" />
+                {scheduledSuccessBooking.scheduledDate} • {scheduledSuccessBooking.scheduledTime}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-500">Service</span>
+              <span className="font-bold text-slate-800">{translateService(service.name)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-500">Estimated Total</span>
+              <span className="font-black text-slate-900">₹{scheduledSuccessBooking.fare}</span>
+            </div>
+            <div className="flex items-start justify-between text-xs pt-2 border-t border-slate-200/60">
+              <span className="font-semibold text-slate-500 shrink-0 mr-2">Address</span>
+              <span className="font-medium text-slate-700 text-right truncate">
+                {location}
+              </span>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-6 flex max-w-md flex-col gap-2.5">
+            <button
+              onClick={() => nav("/customer/bookings?tab=scheduled")}
+              className="btn-primary flex items-center justify-center gap-2 bg-purple-600 py-3.5 text-sm font-bold text-white hover:bg-purple-700 shadow-md shadow-purple-600/20"
+            >
+              <CalendarDays size={16} />
+              View in My Bookings
+            </button>
+            <button
+              onClick={() => nav(`/booking/${scheduledSuccessBooking.id || scheduledSuccessBooking._id}`)}
+              className="btn-secondary flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-slate-700"
+            >
+              View Appointment Details
+            </button>
+            <button
+              onClick={() => nav("/customer")}
+              className="text-xs font-bold text-slate-400 hover:text-slate-600 py-1"
+            >
+              Return to Home
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const startRadarScan = async () => {
     if (!coords.lat || !coords.lng) {
       setError("Please select your location first.");
@@ -87,6 +162,15 @@ export default function NewBooking() {
     if (!coords.lat || !coords.lng) {
       return setError("Please select your location.");
     }
+    if (when === "schedule") {
+      if (!date || !time) {
+        return setError("Please select both a date and time for your scheduled appointment.");
+      }
+      const todayStr = new Date().toISOString().split("T")[0];
+      if (date < todayStr) {
+        return setError("Scheduled date cannot be in the past.");
+      }
+    }
     setLoading(true);
     setError("");
     try {
@@ -95,7 +179,7 @@ export default function NewBooking() {
         location: { lat: coords.lat, lng: coords.lng, address: location },
         scheduledDate: when === "schedule" ? date : undefined,
         scheduledTime: when === "schedule" ? time : undefined,
-        emergency,
+        emergency: when === "schedule" ? false : emergency,
         description,
         workerId: workerId || undefined
       });
@@ -106,7 +190,12 @@ export default function NewBooking() {
         setMatchedWorker(null);
       }
       setCurrentLocation({ address: location, lat: coords.lat, lng: coords.lng });
-      nav(`/booking/${b.id}/tracking`);
+
+      if (when === "schedule") {
+        setScheduledSuccessBooking(b);
+      } else {
+        nav(`/booking/${b.id}/tracking`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to create booking");
     } finally {
@@ -222,31 +311,80 @@ export default function NewBooking() {
               <p className="text-sm text-slate-500">Get a nearby worker as soon as possible</p>
             </button>
             <button
-              onClick={() => setWhen("schedule")}
+              onClick={() => {
+                setWhen("schedule");
+                if (!date) {
+                  const tmrw = new Date();
+                  tmrw.setDate(tmrw.getDate() + 1);
+                  setDate(tmrw.toISOString().split("T")[0]);
+                }
+                if (!time) {
+                  setTime("10:00");
+                }
+              }}
               className={`rounded-2xl border p-5 text-left transition ${
-                when === "schedule" ? "border-brand-500 bg-brand-50" : "border-slate-200"
+                when === "schedule" ? "border-purple-500 bg-purple-50/50 ring-2 ring-purple-200" : "border-slate-200"
               }`}
             >
-              <CalendarDays className="text-brand-600" />
-              <p className="mt-3 font-bold">Schedule</p>
-              <p className="text-sm text-slate-500">Choose a specific date and time</p>
+              <CalendarDays className="text-purple-600" />
+              <p className="mt-3 font-bold">Schedule for Later</p>
+              <p className="text-sm text-slate-500">Choose a specific date and time slot</p>
             </button>
           </div>
 
           {when === "schedule" && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <input
-                type="date"
-                className="input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-              <input
-                type="time"
-                className="input"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              />
+            <div className="mt-5 space-y-4 rounded-2xl border border-purple-100 bg-purple-50/40 p-4">
+              <div className="flex items-center gap-2 text-purple-950 font-bold text-xs">
+                <CalendarDays size={15} className="text-purple-600" />
+                Select Preferred Date & Time
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Date</label>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    className="input bg-white text-xs font-semibold"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Time</label>
+                  <input
+                    type="time"
+                    className="input bg-white text-xs font-semibold"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Quick time slots */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Popular Time Slots</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "Morning (09:00 AM)", value: "09:00" },
+                    { label: "Midday (12:00 PM)", value: "12:00" },
+                    { label: "Afternoon (03:00 PM)", value: "15:00" },
+                    { label: "Evening (06:00 PM)", value: "18:00" }
+                  ].map((slot) => (
+                    <button
+                      key={slot.value}
+                      type="button"
+                      onClick={() => setTime(slot.value)}
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                        time === slot.value
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "bg-white text-slate-700 border border-slate-200 hover:border-purple-300"
+                      }`}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -259,25 +397,47 @@ export default function NewBooking() {
 
           {error && <p className="mt-3 text-sm font-semibold text-red-700">{error}</p>}
 
-          <div className="mt-6 flex flex-col gap-2.5">
-            <button
-              onClick={startRadarScan}
-              disabled={loading}
-              className="btn-primary flex w-full items-center justify-center gap-2 bg-emerald-600 py-3.5 text-base font-black text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 active:scale-[0.99]"
-            >
-              <Radio size={20} className="animate-pulse text-emerald-200" />
-              Find Nearby Workers (Radar Scan) ⚡
-            </button>
+          {when === "schedule" ? (
+            <div className="mt-6 flex flex-col gap-2.5">
+              <button
+                onClick={() => submit()}
+                disabled={loading || !date || !time}
+                className="btn-primary flex w-full items-center justify-center gap-2 bg-purple-600 py-3.5 text-base font-black text-white shadow-lg shadow-purple-600/25 transition hover:bg-purple-700 active:scale-[0.99] disabled:opacity-50"
+              >
+                <CalendarDays size={18} />
+                {loading ? "Confirming Schedule..." : "Confirm Scheduled Booking 📅"}
+              </button>
 
-            <button
-              onClick={() => submit()}
-              disabled={loading}
-              className="btn-secondary flex w-full items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800"
-            >
-              <Sparkles size={14} />
-              Or Instant Auto-Match Without Selection
-            </button>
-          </div>
+              <button
+                onClick={startRadarScan}
+                disabled={loading || !date || !time}
+                className="btn-secondary flex w-full items-center justify-center gap-2 text-xs font-bold text-purple-800 hover:bg-purple-50"
+              >
+                <Sparkles size={14} className="text-purple-600" />
+                Select Preferred Cooperative Worker (Optional)
+              </button>
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-col gap-2.5">
+              <button
+                onClick={startRadarScan}
+                disabled={loading}
+                className="btn-primary flex w-full items-center justify-center gap-2 bg-emerald-600 py-3.5 text-base font-black text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 active:scale-[0.99]"
+              >
+                <Radio size={20} className="animate-pulse text-emerald-200" />
+                Find Nearby Workers (Radar Scan) ⚡
+              </button>
+
+              <button
+                onClick={() => submit()}
+                disabled={loading}
+                className="btn-secondary flex w-full items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800"
+              >
+                <Sparkles size={14} />
+                Or Instant Auto-Match Without Selection
+              </button>
+            </div>
+          )}
         </div>
       )}
 
