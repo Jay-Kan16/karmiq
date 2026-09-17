@@ -10,7 +10,25 @@ export default function Bookings() {
   const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
-    api.getBookings().then(setData).catch(() => {});
+    let active = true;
+    const load = () => {
+      api.getBookings().then((res) => {
+        if (active) setData(res);
+      }).catch(() => {});
+    };
+
+    load();
+    const timer = setInterval(load, 3000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, []);
 
   return (

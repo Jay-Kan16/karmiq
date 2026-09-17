@@ -94,9 +94,15 @@ export default function Tracking() {
 
     load();
     const timer = window.setInterval(load, 3000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
     return () => {
       active = false;
       clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
     };
   }, [id]);
 
@@ -277,8 +283,30 @@ export default function Tracking() {
 
           {/* Journey Stepper Card */}
           <div className="card p-5">
-            <h3 className="mb-4 font-bold text-slate-900">Journey</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900">{t("journey")}</h3>
+              <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                Live Status
+              </span>
+            </div>
             <BookingStepper status={b.status} />
+
+            <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-3 text-xs font-semibold text-slate-700">
+              {b.status === "WORKER_ASSIGNED"
+                ? "Worker assigned to your booking. Waiting for confirmation."
+                : b.status === "ACCEPTED"
+                ? "Worker accepted the booking! Preparing to start journey."
+                : b.status === "ON_THE_WAY"
+                ? `Worker is on the way to your address! ${b.eta ? `~${b.eta} min away.` : ""}`
+                : b.status === "ARRIVED"
+                ? "Worker has arrived at your location."
+                : b.status === "SERVICE_STARTED"
+                ? "Service is currently in progress."
+                : b.status === "COMPLETED"
+                ? "Service completed!"
+                : "Tracking booking progress..."}
+            </div>
           </div>
 
           {/* CUSTOMER PAYMENT & REVIEW CARD WHEN COMPLETED */}

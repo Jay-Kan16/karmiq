@@ -17,7 +17,26 @@ export default function BookingDetails() {
   const [chat, setChat] = useState(false);
 
   useEffect(() => {
-    if (id) api.getBooking(id).then(setB);
+    if (!id) return;
+    let active = true;
+    const load = () => {
+      api.getBooking(id).then((res) => {
+        if (active) setB(res);
+      }).catch(() => {});
+    };
+
+    load();
+    const timer = setInterval(load, 3000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [id]);
 
   if (!b) return <div className="card p-10 text-center">Loading booking…</div>;
