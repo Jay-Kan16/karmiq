@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "../../components/common/StatusBadge";
 import ServiceIcon from "../../components/common/ServiceIcon";
+import CustomerScheduledModal from "../../components/booking/CustomerScheduledModal";
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 
@@ -34,6 +35,7 @@ export default function Bookings() {
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
   const [rescheduleError, setRescheduleError] = useState("");
   const [successToast, setSuccessToast] = useState("");
+  const [viewScheduledBooking, setViewScheduledBooking] = useState<any | null>(null);
 
   const load = () => {
     api
@@ -299,9 +301,16 @@ export default function Bookings() {
                         >
                           <XCircle size={14} />
                         </button>
+                        <button
+                          onClick={() => setViewScheduledBooking(b)}
+                          className="btn-primary bg-purple-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-purple-700 shadow-sm"
+                        >
+                          Reservation Pass
+                        </button>
                         <Link
                           to={`/booking/${bookingId}`}
-                          className="btn-primary bg-purple-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-purple-700 shadow-sm"
+                          className="btn-secondary px-2.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                          title="View Details"
                         >
                           Details
                         </Link>
@@ -454,6 +463,14 @@ export default function Bookings() {
             </div>
           </div>
         </div>
+      )}
+
+      {viewScheduledBooking && (
+        <CustomerScheduledModal
+          isOpen={Boolean(viewScheduledBooking)}
+          onClose={() => setViewScheduledBooking(null)}
+          booking={viewScheduledBooking}
+        />
       )}
     </div>
   );

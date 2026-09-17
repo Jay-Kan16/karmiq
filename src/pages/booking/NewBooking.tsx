@@ -8,6 +8,7 @@ import WorkerRadarScanner, { type NearbyWorker } from "../../components/booking/
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import type { Service, Booking } from "../../types";
+import CustomerScheduledModal from "../../components/booking/CustomerScheduledModal";
 
 export default function NewBooking() {
   const nav = useNavigate();
@@ -39,6 +40,7 @@ export default function NewBooking() {
   const [nearbyWorkers, setNearbyWorkers] = useState<NearbyWorker[]>([]);
   const [radarLoading, setRadarLoading] = useState(false);
   const [scheduledSuccessBooking, setScheduledSuccessBooking] = useState<any | null>(null);
+  const [showScheduledModal, setShowScheduledModal] = useState(false);
 
   useEffect(() => {
     api.getServices().then((list) => {
@@ -68,6 +70,12 @@ export default function NewBooking() {
   if (scheduledSuccessBooking) {
     return (
       <div className="mx-auto max-w-2xl py-6">
+        <CustomerScheduledModal
+          isOpen={showScheduledModal}
+          onClose={() => setShowScheduledModal(false)}
+          booking={scheduledSuccessBooking}
+        />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -114,6 +122,13 @@ export default function NewBooking() {
           </div>
 
           <div className="mx-auto mt-6 flex max-w-md flex-col gap-2.5">
+            <button
+              onClick={() => setShowScheduledModal(true)}
+              className="btn-secondary flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-purple-700 border-purple-200 bg-purple-50/50 hover:bg-purple-100"
+            >
+              <Sparkles size={14} />
+              Open Confirmation Popup
+            </button>
             <button
               onClick={() => nav("/customer/bookings?tab=scheduled")}
               className="btn-primary flex items-center justify-center gap-2 bg-purple-600 py-3.5 text-sm font-bold text-white hover:bg-purple-700 shadow-md shadow-purple-600/20"
@@ -193,6 +208,7 @@ export default function NewBooking() {
 
       if (when === "schedule") {
         setScheduledSuccessBooking(b);
+        setShowScheduledModal(true);
       } else {
         nav(`/booking/${b.id}/tracking`);
       }

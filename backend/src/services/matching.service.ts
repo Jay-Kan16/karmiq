@@ -15,13 +15,21 @@ function score(w: any, d: number) {
   );
 }
 
-export async function findBestWorker(serviceName: string, lat: number, lng: number) {
+export async function findBestWorker(serviceName: string, lat: number, lng: number, includeOfflineForScheduled: boolean = false) {
   // Find online workers with matching skill who are not rejected (VERIFIED or PENDING)
-  const candidates = await Worker.find({
+  let candidates = await Worker.find({
     skills: { $regex: new RegExp(`^${serviceName}$`, "i") },
     availability: "online",
     verificationStatus: { $ne: "REJECTED" }
   }).populate("userId", "name phone email");
+
+  if (!candidates.length && includeOfflineForScheduled) {
+    // For scheduled bookings, if no online worker is available right now, match from qualified workers
+    candidates = await Worker.find({
+      skills: { $regex: new RegExp(`^${serviceName}$`, "i") },
+      verificationStatus: { $ne: "REJECTED" }
+    }).populate("userId", "name phone email");
+  }
 
   if (!candidates.length) return null;
 
