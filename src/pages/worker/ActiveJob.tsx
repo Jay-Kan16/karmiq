@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { MapPin, ArrowLeft, PlusCircle, Navigation, ShieldCheck, MessageSquare } from "lucide-react";
+import { MapPin, ArrowLeft, PlusCircle, Navigation, ShieldCheck, MessageSquare, Phone } from "lucide-react";
 import MapView from "../../components/map/MapView";
 import { api } from "../../services/api";
 import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
 import ChatModal from "../../components/chat/ChatModal";
+import CallModal from "../../components/chat/CallModal";
 import { openGoogleMapsRoute, getGoogleMapsDirectionsUrl } from "../../utils/maps";
 
 export default function ActiveJob() {
@@ -13,6 +14,7 @@ export default function ActiveJob() {
   const [workerCoord, setWorkerCoord] = useState<{ lat: number; lng: number } | undefined>();
   const [showExtraModal, setShowExtraModal] = useState(false);
   const [chat, setChat] = useState(false);
+  const [call, setCall] = useState(false);
 
   useEffect(() => {
     (id ? api.getBooking(id) : api.getActiveWorkerJob()).then(setB).catch(() => {});
@@ -116,6 +118,14 @@ export default function ActiveJob() {
 
               <button
                 type="button"
+                onClick={() => setCall(true)}
+                className="btn-secondary flex items-center justify-center gap-2 w-full text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-300 py-2.5"
+              >
+                <Phone size={15} className="text-emerald-600" /> Call Customer (Masked Bridge)
+              </button>
+
+              <button
+                type="button"
                 onClick={() => openGoogleMapsRoute(b, workerCoord)}
                 className="btn-primary flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-xs font-black text-white shadow-sm py-2.5"
               >
@@ -184,6 +194,14 @@ export default function ActiveJob() {
           bookingId={b._id || b.id}
           workerName={b.customerId?.name || "Customer"}
           onClose={() => setChat(false)}
+        />
+      )}
+
+      {call && (
+        <CallModal
+          bookingId={b._id || b.id}
+          name={b.customerId?.name || "Customer"}
+          onClose={() => setCall(false)}
         />
       )}
     </div>

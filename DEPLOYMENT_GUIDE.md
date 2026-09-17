@@ -66,6 +66,10 @@ If you prefer setting up via the Render UI:
    | `MONGO_URI` | `mongodb+srv://jayeshdangi9371_db_user:DJqIGQKGozSgyFYT@cluster0.apyhprk.mongodb.net/kaamsaathi?retryWrites=true&w=majority` | Your MongoDB Atlas connection |
    | `JWT_SECRET` | `generate-a-strong-secret-key-32-chars` | Enter any long random string |
    | `CLIENT_URL` | `https://kaamsaathi.onrender.com` | Optional: Your Render URL once created |
+   | `PLIVO_AUTH_ID` | `Your Plivo Auth ID` | From Plivo Console |
+   | `PLIVO_AUTH_TOKEN` | `Your Plivo Auth Token` | From Plivo Console |
+   | `PLIVO_NUMBER` | `+9180XXXXXXXX` | Your rented Plivo Virtual Number in E.164 |
+   | `BACKEND_URL` | `https://kaamsaathi.onrender.com` | Your live backend URL for webhooks |
 
 5. Under **Advanced Settings**:
    - **Health Check Path**: `/api/health`

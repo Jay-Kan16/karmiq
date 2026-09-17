@@ -404,8 +404,14 @@ export default function Tracking() {
         </div>
       </div>
 
-      {chat && <ChatModal bookingId={b.id} workerName={workerName} onClose={() => setChat(false)} />}
-      {call && phone && <CallModal phone={phone} name={workerName} onClose={() => setCall(false)} />}
+      {call && (
+        <CallModal
+          bookingId={b.id || (b as any)._id}
+          phone={phone}
+          name={workerName}
+          onClose={() => setCall(false)}
+        />
+      )}
 
       {showScanner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">

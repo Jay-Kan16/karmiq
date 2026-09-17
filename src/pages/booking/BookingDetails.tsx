@@ -50,15 +50,13 @@ export default function BookingDetails() {
               <b className="text-base text-slate-900">{w.userId?.name}</b>
               <p className="text-sm text-slate-500">{w.userId?.phone}</p>
               <div className="mt-3 flex gap-2">
-                {w.userId?.phone && (
-                  <button
-                    type="button"
-                    onClick={() => setCall(true)}
-                    className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-bold"
-                  >
-                    <Phone size={15} /> Call
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setCall(true)}
+                  className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-bold"
+                >
+                  <Phone size={15} /> Call
+                </button>
                 <button
                   type="button"
                   onClick={() => setChat(true)}
@@ -120,10 +118,11 @@ export default function BookingDetails() {
         </div>
       </div>
 
-      {call && w?.userId?.phone && (
+      {call && (
         <CallModal
-          phone={w.userId.phone}
-          name={w.userId.name || "Worker"}
+          bookingId={String(bookingId)}
+          phone={w?.userId?.phone}
+          name={w?.userId?.name || "Worker"}
           onClose={() => setCall(false)}
         />
       )}

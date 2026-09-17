@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import routes from "./routes/index.js";
+import telephonyRoutes from "./routes/telephony.routes.js";
 import { notFound, errorHandler } from "./middleware/error.js";
 
 const app = express();
@@ -39,6 +40,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 // Request logging to immediately identify any 401s or failed calls
 app.use((req, res, next) => {
@@ -62,6 +64,7 @@ app.use(
 
 app.get("/api/health", (req, res) => res.json({ success: true, data: { status: "ok" } }));
 app.use("/api", routes);
+app.use("/api/telephony", telephonyRoutes);
 
 // Serve static frontend in production if dist directory containing index.html exists
 if (clientDist) {
