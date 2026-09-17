@@ -10,7 +10,8 @@ import {
   IndianRupee,
   Clock,
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  BellRing
 } from "lucide-react";
 import { api } from "../../services/api";
 import AddExtraChargesModal from "../../components/worker/AddExtraChargesModal";
@@ -36,7 +37,27 @@ export default function WorkerProfile() {
 
   useEffect(() => {
     loadProfileAndJobs();
+    const timer = setInterval(loadProfileAndJobs, 4000);
+    return () => clearInterval(timer);
   }, []);
+
+  const handleAcceptJob = async (jobId: string) => {
+    try {
+      await api.updateBookingStatus(jobId, "ACCEPTED");
+      await loadProfileAndJobs();
+    } catch (e: any) {
+      alert(e.message || "Failed to accept job");
+    }
+  };
+
+  const handleDeclineJob = async (jobId: string) => {
+    try {
+      await api.updateBookingStatus(jobId, "REJECTED");
+      await loadProfileAndJobs();
+    } catch (e: any) {
+      alert(e.message || "Failed to decline job");
+    }
+  };
 
   const handleVerify = async () => {
     setVerifying(true);
@@ -112,18 +133,30 @@ export default function WorkerProfile() {
               const extra = b.extraCharges || 0;
               const fare = b.fare || 0;
 
+              const isIncoming = b.status === "WORKER_ASSIGNED";
+
               return (
                 <div
                   key={bookingId}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-400 sm:flex sm:items-center sm:justify-between sm:gap-4"
+                  className={`rounded-2xl border p-4 shadow-sm transition sm:flex sm:items-center sm:justify-between sm:gap-4 ${
+                    isIncoming
+                      ? "border-2 border-emerald-500 bg-emerald-50/50 shadow-emerald-500/10 ring-2 ring-emerald-500/20"
+                      : "border-slate-200 bg-white hover:border-brand-400"
+                  }`}
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-black text-slate-900">{serviceName}</span>
                       <span className="text-xs text-slate-400">#{String(bookingId).slice(-6)}</span>
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                        {b.status?.replace(/_/g, " ")}
-                      </span>
+                      {isIncoming ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wider animate-pulse">
+                          <BellRing size={11} /> New Request
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          {b.status?.replace(/_/g, " ")}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-600">
                       Customer: <b>{customerName}</b> • {b.location?.address || "On site"}
@@ -135,20 +168,35 @@ export default function WorkerProfile() {
                         <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 font-bold text-amber-900">
                           Includes ₹{extra} extra ({b.extraChargesReason || "materials"})
                         </span>
-                      ) : (
-                        <span className="text-slate-400">No extra charges yet</span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
 
                   <div className="mt-3 sm:mt-0">
-                    <button
-                      onClick={() => setSelectedBookingForExtra(b)}
-                      className="btn-primary flex w-full items-center justify-center gap-1.5 bg-brand-600 px-4 py-2 text-xs font-black text-white hover:bg-brand-700 shadow-sm sm:w-auto"
-                    >
-                      <PlusCircle size={15} />
-                      {extra > 0 ? "Add More Charges" : "Add Extra Charges"}
-                    </button>
+                    {isIncoming ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleDeclineJob(bookingId)}
+                          className="btn-secondary px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-200"
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => handleAcceptJob(bookingId)}
+                          className="btn-primary bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20"
+                        >
+                          Accept Job
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedBookingForExtra(b)}
+                        className="btn-primary flex w-full items-center justify-center gap-1.5 bg-brand-600 px-4 py-2 text-xs font-black text-white hover:bg-brand-700 shadow-sm sm:w-auto"
+                      >
+                        <PlusCircle size={15} />
+                        {extra > 0 ? "Add More Charges" : "Add Extra Charges"}
+                      </button>
+                    )}
                   </div>
                 </div>
               );

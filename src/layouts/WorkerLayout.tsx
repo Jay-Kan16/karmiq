@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "../components/navbar/Navbar";
 import Sidebar from "../components/sidebar/Sidebar";
+import WorkerJobAlertModal from "../components/worker/WorkerJobAlertModal";
 
 export default function WorkerLayout() {
   const [menu, setMenu] = useState(false);
@@ -27,6 +28,9 @@ export default function WorkerLayout() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Global Real-Time Incoming Job Popup for Workers */}
+      <WorkerJobAlertModal />
     </div>
   );
 }
